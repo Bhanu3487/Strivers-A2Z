@@ -483,6 +483,37 @@ int bestTimeToBuyAndSellStock(std::vector<int>& prices) {
     return max_profit;
 }
 
+//Q7 Rearrange the array in alternating positive and negative items
+// arr has equal pos and neg, return arr st it has alternate pos and neg, starting with pos. 
+// brute, store pos and neg elements in different arrs and replace even and odd idx in nums with pos and neg ele in order
+// time: O(n) (2 passes) space: O(n) (2 arr, pos and neg of size n/2)
+// optimal, create an arr ans and store pos ele in nums at even idx in ans, opp for neg
+// time: O(n) (1 pass) space: O(n)
+// asked for O(1) here space can be taken to be O(1) bcz output is vector<int> so no extraspace created
+class Solution {
+public:
+    vector<int> rearrangeArray(vector<int>& nums) {
+        vector<int> pos, neg; 
+        for(int i = 0; i < nums.size(); i++){
+            if(nums[i] > 0) pos.push_back(nums[i]);
+            else neg.push_back(nums[i]);
+        }
+        int p = 0, n = 0;
+        for(int i = 0; i < nums.size(); i++){
+            if(i%2==0){
+                nums[i] = pos[p];
+                p++;
+            }
+            else {
+                cout << neg[n];
+                nums[i] = neg[n];
+                n++;
+            }
+        }
+        return nums;
+    }
+};
+
 
 int main(){
     int n = 5;
