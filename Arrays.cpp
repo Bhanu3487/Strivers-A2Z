@@ -607,3 +607,60 @@ public:
     }
 };
 
+// Q11 Set Matrix Zeroes
+// input 2d matrix, if m[i][j] == 0 then set the whole row and coln to zero
+// brute force: have 2 unordered sets keep track of rows and col'n which should be made zeroes.
+// time: O(n^2), space : O(n)
+class Solution {
+public:
+    void setZeroes(vector<vector<int>>& matrix) {
+        int n = matrix.size(), m = matrix[0].size(); 
+        unordered_set<int> rows,cols;
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < m; j++){
+                if(matrix[i][j] == 0){
+                    rows.insert(i);
+                    cols.insert(j);
+                }
+            }
+        }
+        if(rows.empty()) return;
+
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < m; j++){
+                if(rows.find(i) != rows.end()) matrix[i][j] = 0;
+                else if(cols.find(j) != cols.end()) matrix[i][j] = 0;
+            }
+        }
+    }
+};
+// optimal sol'n: 
+// similar to the prev one but we use the 1st row(with an extra variable as m[0][0] is would repeat other wise) and 1st coln to keep track of zeroes
+// and we check from right bottom corner to prevent overwriting incorrect zeroes because of col variable which is added
+// time: O(n^2), space : O(1)
+class Solution {
+public:
+    void setZeroes(vector<vector<int>>& matrix) {
+        int n = matrix.size(), m = matrix[0].size(); 
+        int col_0 = 1;
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < m; j++){
+                if(matrix[i][j] == 0){
+                    if(j > 0) {matrix[i][0] = 0; matrix[0][j] = 0;}
+                    else {matrix[i][0] = 0; col_0 = 0;}
+                }
+            }
+        }
+
+        for(int i = n-1; i >= 0; i--){
+            for(int j = m-1; j >= 1; j--){
+                if(matrix[i][0] == 0 || matrix[0][j] == 0){
+                    matrix[i][j] = 0;
+                }
+            }
+        }
+        if(col_0 == 0){
+            for(int i = 0; i < n; i++) matrix[i][0] = 0;
+        }
+    }
+};
