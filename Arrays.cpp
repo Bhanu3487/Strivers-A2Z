@@ -515,10 +515,95 @@ public:
 };
 
 
-int main(){
-    int n = 5;
-    vector<int> vect = {1,2,3,4,5};
-    vector<int> code1 = getSecondOrderElements(n , vect);
-    return 0;
-}
+// Q8 Next greater Permutation
+// from end, find idx which is greater than its next ele and mark that idx, if none(last permutation) return ascending arr
+// now from right find the first element which is greater than A[idx] (1st bcz idx+1 to n-1 is in decreasing order so 1st is smallest num greater than A[idx])
+// now swap the above ele and idx, and reverse the part from idx+1 to end.
+// time: O(n), space: O(1) 
+
+class Solution {
+public:
+    void nextPermutation(vector<int>& A) {
+        int ind = -1;
+        int n = A.size();
+        for(int i = n-2; i >=0 ; i--){
+            if(A[i] < A[i+1]){
+                ind = i;
+                break;
+            }
+        }
+        if(ind == -1) {
+            reverse(A.begin(), A.end());
+            return;
+        }
+        for(int i = n-1; i > ind; i--){
+            if(A[i] > A[ind]){
+                swap(A[i], A[ind]);
+                break;
+            }
+        }
+
+        reverse(A.begin()+ind+1, A.end());
+    }
+};
+
+//Q9- easy
+
+// Q10 Longest Consecutive sequence
+// brute sol'n for x in arr check for x+1 if exists a while loop to search for x+2...
+// time : O(n**2), space : O(1)
+// better sol'n
+// sort the array, in a for loop till any arr[i+1] - arr[i] != 1 or reached n-1, continue increasing the count. also remove repeated ele.
+class Solution {
+public:
+    int longestConsecutive(vector<int>& nums) {
+        int n = nums.size();
+        if (n==1) return 1;
+        sort(nums.begin(), nums.end());
+        int ans = 0, diff = 0, start = 0, rep = 0;
+        for(int i = 0; i < n; i++){
+            if(i != n-1 && nums[i+1] == nums[i]){
+                rep++;
+            }
+            else if(i == n-1 || nums[i+1] - nums[i] != 1){
+                diff = i - start + 1 - rep;
+                if(diff > ans) ans = diff;
+                start = i+1;
+                rep = 0;
+            }
+        }
+        return ans;
+    }
+};
+// optimal sol'n: using unordered set
+// store all ele in a set 
+// for an ele in set if its prev num exists in set continue, else start checking for next ele in while loop(as in brute force)
+// searching for ele in set: best/avg case: O(1) , worst : O(n) 
+// time, 1st for loop :O(n), 2nd for loop with while loop : O(n) (2 passes kind of)
+// for numbers [100,4,101,2,102,3,1] : 2nd for loop enters only for 100 (while loop iters 3) and 1(iters 4)- total 7
+// space :O(n) for set
+class Solution {
+public:
+    int longestConsecutive(vector<int>& a) {
+        int n = a.size();
+        if (n<2) return n;
+        int longest = 1;
+        unordered_set<int> st;
+        for(int i = 0; i < n; i++){
+            st.insert(a[i]);
+        }
+        for(auto it:st){
+            if(st.find(it - 1) == st.end()){
+                int cnt = 1;
+                int x = it;
+                while(st.find(x+1) != st.end()){
+                    x = x+1;
+                    cnt = cnt + 1;
+                }
+                longest = max(longest, cnt);
+            }
+        }
+        return longest;
+    }
+};
 
