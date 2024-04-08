@@ -144,7 +144,6 @@ vector<int> moveZeroes(int n, vector<int> a){
 // 2 pointer we push the smaller of a[i] and b[j] such that result doesnt contain them.
 // time: O(n+m), space: O(n+m)
 vector < int > sortedArray(vector < int > &a, vector < int > &b) {
-    // Write your code here
     vector<int> result;
     int i = 0, j = 0, k = 0;
     while(i < a.size() && j < b.size()){
@@ -243,7 +242,6 @@ public:
 //Q13 optimal solution by take u frwd
 
 int longestSubarrayWithSumK(vector<int> a, long long k) {
-    // Write your code here
     int left = 0, right = 0;
     long long sum = a[0];
     int max_len = 0;
@@ -662,5 +660,40 @@ public:
         if(col_0 == 0){
             for(int i = 0; i < n; i++) matrix[i][0] = 0;
         }
+    }
+};
+
+// Q13 Rotate matrix by 90
+// like a rubiks cube right turn
+// idea: elements at matrix[i][j] its image wrt x axis, y axis and origin (with the center of matric as origin) should make a clockwise rotation
+// time: (n^2) space : O(1)
+class Solution {
+public:
+    void rotate(vector<vector<int>>& matrix) {
+        int n = matrix.size();
+        if(n%2 == 1){
+            for(int i = 0; i < (n/2); i++){
+                for(int j = i; j < n-1-i; j++){
+                    int temp = matrix[i][j];
+                    matrix[i][j] = matrix[n-1-j][i];
+                    matrix[n-1-j][i] = matrix[n-1-i][n-1-j];
+                    matrix[n-1-i][n-1-j] = matrix[j][n-1-i];
+                    matrix[j][n-1-i] = temp;
+                }
+            }
+        }
+        else {
+            for(int i = 0; i < (n/2)+1; i++){
+                for(int j = i; j < n-1-i; j++){
+                    int temp = matrix[i][j];
+                    matrix[i][j] = matrix[n-1-j][i];
+                    matrix[n-1-j][i] = matrix[n-1-i][n-1-j];
+                    matrix[n-1-i][n-1-j] = matrix[j][n-1-i];
+                    matrix[j][n-1-i] = temp;
+                }
+            }
+        }
+        
+        
     }
 };
