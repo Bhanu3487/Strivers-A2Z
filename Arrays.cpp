@@ -697,3 +697,169 @@ public:
         
     }
 };
+
+//Q14 Spiral order of matrix
+// just find the pattern for mxn matric
+// time: O(mxn); space ; O(mxn)
+class Solution {
+public:
+    vector<int> spiralOrder(vector<vector<int>>& matrix) {
+        int m = matrix.size(), n = matrix[0].size();
+        vector<int> ans;
+        int i = 0, row = 0, col = 0;
+        while(true){
+            if(i > n-i-1) break;
+            for(int col = i; col < n-i; col++){
+                ans.push_back(matrix[i][col]);
+            }
+            if(i+1 > m-i-1) break;
+            for(int row = i+1; row < m-i; row++){
+                ans.push_back(matrix[row][n-1-i]);
+            }
+            if(n-2-i < i) break;
+            for(int col = n-2-i; col > i-1; col--){
+                ans.push_back(matrix[m-1-i][col]);
+            }
+            if(m-2-i < i+1) break;
+            for(int row = m-2-i; row > i; row--){
+                ans.push_back(matrix[row][i]);
+            }
+            i++;
+        }
+        return ans;
+    }
+};
+
+
+//Q15 - sub array sum - using prefix sum
+class Solution {
+public:
+    int subarraySum(vector<int>& nums, int k) {
+        int n = nums.size();
+        int dp_table[n+1];
+        dp_table[0] = 0;
+        dp_table[1] = nums[0];
+        for(int i = 2; i < n+1; i++){
+            dp_table[i] = dp_table[i-1] + nums[i-1];
+        }
+        int count = 0;
+        for(int j = n; j > -1; j--){
+            for(int i = 0; i < j; i++){
+                if(dp_table[j] - dp_table[i] == k) count++;
+                cout << i << " " << j << " " << dp_table[j] - dp_table[i] << endl;
+            }
+        }
+        return count;
+    }
+};
+
+
+//------------------------------ HARD ---------------------------------------
+// Q1: Pascals Triangle
+// try on book- check for pattern- write as a lower right angled triangle than an  isoceles triangle
+// time: O(n^2), space : O(n^2)
+class Solution {
+public:
+    vector<vector<int>> generate(int numRows) {
+        vector<vector<int>> triangle;
+        if(numRows<=0) return triangle;
+        for(int i = 0; i < numRows; i++){
+            vector<int> row;
+            for(int j = 0; j < i+1; j++){
+                if(j==0 || j==i) row.push_back(1);
+                else row.push_back(triangle[i-1][j-1] + triangle[i-1][j]);
+            }
+            triangle.push_back(row);
+        }
+        return triangle;
+    }
+};
+
+//Q2: majority element - freq >n/2
+//used unordered map to store freq 
+// better: time: O(n)- n*O(1) - unordered map(best case, O(n) for worst case), space: O(n)
+class Solution {
+public:
+    vector<int> majorityElement(vector<int>& nums) {
+        vector<int> ans;
+        unordered_map<int, int> freq; 
+        int n = nums.size(); 
+        
+        for(int i = 0; i < n; i++) {
+            freq[nums[i]]++;
+        }
+        
+        for (auto it = freq.begin(); it != freq.end(); it++) {
+            if (it->second > n/3) {
+                ans.push_back(it->first);
+                if(ans.size() > 2) break;}
+        }
+        
+        return ans;
+    }
+};
+
+//optimal: Boyer-Moore Majority Vote - reduce space
+// time: O(n), space: O(1)
+// not necessary that e1 and e2 are answers so need to 2nd pass check
+
+class Solution {
+public:
+    vector<int> majorityElement(vector<int>& nums) {
+        int n = nums.size();
+        vector<int> ans;
+        int c1 = 0, e1 = 0;
+        int c2 = 0, e2 = 0;
+        for(int i = 0; i < n; i++){
+            if(c1 == 0 && (c2 == 0 || e2 != nums[i])){
+                c1++; e1 = nums[i];
+            }
+            else if(e1 == nums[i]){ 
+                c1++;
+            }
+            else if(c2 == 0){
+                c2++; e2 = nums[i];
+            }
+            else if(e2 == nums[i]){ 
+                c2++;
+            }
+            else{c1--; c2--;}
+        }
+        c1 = c2 = 0;        //2nd pass check
+        for (int i = 0; i < n; ++i) {
+            if (nums[i] == e1) c1++;
+            else if (nums[i] == e2) c2++;
+        }
+        if (c1 > n / 3) ans.push_back(e1);
+        if (c2 > n / 3) ans.push_back(e2);
+        return ans;
+    }
+};
+
+// Q3 3sum - num[i]+num[j]+num[k] = 0 and i,j,k are unique
+// 2 loops - fix i, then fix j(>i) st k lies between them
+// this prevents repetition, set hashset to make search easier, set 
+class Solution {
+public:
+    vector<vector<int>> threeSum(vector<int>& nums) {
+        int n = nums.size();
+        set<vector<int>> st;
+        
+        for(int i = 0; i < n; i++){
+            set<int> hashset;
+            for(int j = i+1; j < n; j++){
+                int third = -(nums[i] + nums[j]);
+                if(hashset.find(third) != hashset.end()){
+                    vector<int> temp = {nums[i], nums[j], third};
+                    sort(temp.begin(), temp.end());
+                    st.insert(temp);
+                }
+                hashset.insert(nums[j]);
+            }
+        }
+        vector<vector<int>> ans(st.begin(), st.end());
+        return ans;
+    }
+};
+
+
