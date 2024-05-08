@@ -1,3 +1,6 @@
 
-// Tortoise and Hare - 1st ptr inc by 1, 2nd ptr inc by 2
+// Tortoise and Hare - 2 pts ptng to head, 1st ptr inc by 1, 2nd ptr inc by 2 in loop
 //                   - used in LL: detect a cycle, find middle element
+
+// Dummy Variable - a new node pointing to head, used when we need to create a new ll
+                  - 
