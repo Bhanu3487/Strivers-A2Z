@@ -424,6 +424,97 @@ public:
     }
 };
 
+// Q11 SortLL
+// merging ll using merge sort
+// didnt run
+// sortll func: time:O(logN * (N+(N/2)) where height = logN and at each height N/2 to find middle and N comparisions in merge
+//             space: O(1)
+// in array time:O(NlogN) space:O(N)
+class Solution {
+public:
+    ListNode* sortList(ListNode* head) {
+        if(head == NULL || head->next == NULL)return NULL;
+        ListNode* middle = find_middle(head);
+        ListNode* right = middle->next;
+        middle->next = NULL;
+        ListNode* left = head;
+
+        left = sortList(left);
+        right = sortList(right);
+        return merge(left, right);
+    }
+
+    ListNode* find_middle(ListNode* head){
+        if(head == NULL || head->next == NULL) return head;
+        ListNode* slow = head;
+        ListNode* fast = head;
+        while(fast != NULL && fast->next != NULL){
+            slow = slow->next;
+            fast = fast->next->next;
+        }
+        return slow;
+    }
+
+    ListNode* merge(ListNode* list1, ListNode* list2){
+        ListNode* dummy = new ListNode(-1);
+        ListNode* temp = dummy;
+        while(list1 != NULL && list2 != NULL){
+            if(list1->val < list2->val){
+                temp->next = list1;
+                temp = list1;
+                list1 = list1->next;
+            }
+            else{
+                temp->next = list2;
+                temp = list2;
+                list2 = list2->next;
+            }
+        }
+        if(list1) temp->next = list1;
+        else temp->next = list2;
+        return dummy->next;
+    }
+};
+
+
+// Q12  Sort LL of 0, 1, 2
+// if the next node is :
+// 1: skip,  0: remove it and place it at head, 2: remove it and place at end
+// if the ll starts with 2, then start by removing it and placing at end
+// time: O(n), space: O(1)
+Node* sortList(Node *head){
+    Node* temp = new Node();
+    Node* end = new Node();
+    end = NULL;
+    Node* cur = head;
+    while(cur->data == 2){
+        temp = cur->next;
+        cur->next = end;
+        end = cur;
+        head = temp;
+        cur = head;
+    }
+    while(cur->next != NULL){
+        if(cur->next->data == 1){cur = cur->next;}
+        else{
+            temp = cur->next;
+            cur->next = temp->next;
+            if(temp->data == 0) {
+                temp->next = head;
+                head = temp;
+            } else if (temp->data == 2) {
+                temp->next = end;
+                end = temp;
+            }
+        }
+    }
+    if (end != NULL) {
+        cur->next = end;
+    }
+    return head;
+}
+
+// Equivalent - store all 0,1, and 2's separately in 3 ll by having 3 dummy nodes
 
 // Q13 Find the intersection node
 // 2 different ll join at a node and ot return the idx of this intersection
@@ -471,8 +562,74 @@ public:
 // Optimal
 // have 2 pts traverse both ll, once one of them reaches end pnt it to the next ll and traverse till they reach
 // they will collide at the next intersection (2nd pass) else they will collide at null
+// time:O(n+m) space: O(1)
+class Solution {
+public:
+    ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+        if(headA == NULL|| headB == NULL) return NULL;
+        ListNode *t1 = headA, *t2 = headB;
+        ListNode *temp = new ListNode();
+        int flag1 = 1, flag2 = 1;
+        while(t1 != t2 ){
+            t1 = t1->next;
+            t2 = t2->next;
+            if(t1 == NULL && flag1){t1 = headB; flag1--;}
+            if(t2 == NULL && flag2){t2 = headA; flag2--;}
+        }
+        if(t1 == NULL) return NULL;
+        cout << t1->val << t2->val;
+        return t1;
+    }
+};
+
+// Add 1 to ll number head ptng to msb
+// to add 1 at tail and return head(msb)
+// q: 1 -> 5 -> 2. a:1 -> 5 -> 3 and 9 -> 9. a:1 -> 0 -> 0.
+// reverse the ll, add 1 and reverse it back
+// time: O(3n), space: O(1) - use like 4 extra nodes
+
+Node *addOne(Node *head)
+{
+    Node * prev = head;
+    Node * cur = head->next;
+    Node * NextNode = NULL;
+    prev->next = NULL;
+    while(cur->next != NULL){
+        NextNode = cur->next;
+        cur->next =  prev;
+        prev = cur;
+        cur = NextNode;
+    }
+    cur->next = prev;
 
 
+    head = cur;
+    while(cur->data == 9 ){
+        cur->data = 0;
+        if(cur->next == NULL){
+            Node * node = new Node(0);
+            cur->next = node;
+        }
+        cur = cur->next;
+    }
+    cur->data += 1;
+
+
+    prev = head;
+    cur = head->next;
+    NextNode = NULL;
+    prev->next = NULL;
+    while(cur->next != NULL){
+        NextNode = cur->next;
+        cur->next =  prev;
+        prev = cur;
+        cur = NextNode;
+    }
+    cur->next = prev;
+
+    
+    return cur;
+}
 
 // Q15 Add 2 numbers in LL
 // Dummy variable method
@@ -514,3 +671,23 @@ public:
         return dummy->next;
     }
 };
+
+//-----------------------------------------2D LL MEDIUM-------------------------------------
+
+// Q1 delete all nodes == to k
+// this code didnt work for some reason
+// time:O(n), space: O(1)
+Node *deleteAllOccurrences(Node *head, int k) {
+    Node* temp = head;
+    while(temp != NULL){
+        if (temp->data == k) {
+            if (temp == head)head = head->next;
+            if (temp->next != NULL) temp->next->prev = temp->prev;
+            if (temp->prev != NULL)temp->prev->next = temp->next;
+            temp = temp->next;
+      }
+    }
+    return head;
+}
+
+// Q2
