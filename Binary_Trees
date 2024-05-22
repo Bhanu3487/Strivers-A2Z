@@ -1,0 +1,108 @@
+//{ Driver Code Starts
+//Initial Template for C++
+#include<bits/stdc++.h>
+using namespace std;
+
+struct node {
+  int data;
+  struct node *left;
+  struct node *right;
+};
+
+struct node *newNode(int data) {
+  struct node *node = (struct node *)malloc(sizeof(struct node));
+
+  node->data = data;
+
+  node->left = NULL;
+  node->right = NULL;
+  return (node);
+}
+
+void traverseInOrder(struct node *temp, vector<int> &inorder) {
+
+  if (temp != NULL) {
+    traverseInOrder(temp->left,inorder);
+    // cout << " " << temp->data;
+    inorder.push_back(temp->data);
+    traverseInOrder(temp->right,inorder);
+  }
+  return;
+}
+// } Driver Code Ends
+
+// Q2 - convert an arr  of size 8 to a tree
+class Solution{
+public:
+
+    void create_tree(node* root0, vector<int> &vec){
+        for(int i = 1; i < vec.size(); i++){
+            helper(root0, vec, i);
+        }
+    }
+    
+    void helper(node* root, vector<int> &vec, int idx){
+        if(root->left == NULL){
+            node* leftChild = new node(vec[idx]);
+            root->left = leftChild;
+            return;
+        }
+        else{
+            if(root->right == NULL){
+                node* rightChild = new node(vec[idx]);
+                root->right = rightChild;
+                return;
+            }
+            else {
+                if(root->left->left == NULL || root->left->right == NULL) helper(root->left, vec, idx);
+                else helper(root->right, vec, idx);
+            }
+        }
+    }
+
+};
+
+// Q4,5,6,7 DFs tree traversals: Preorder, Inorder, Postorder Traversal
+// recursive
+// once you visit a node save it and then go to its left, after completely exploring left go to its right
+// recursion
+// time: O(m) no of treenodes; space: O(n) for arr
+class Solution {
+public:
+    vector<int> orderTraversal(TreeNode* root) {
+        vector<int> Order;
+        order(root, Order);
+        return Order;
+    }
+
+    void preorder(TreeNode* node, vector<int> &Order){
+        if(node == NULL)return;
+        // preOrder.push_back(node->val);
+        order(node->left, Order);
+        // inOrder.push_back(node->val);
+        order(node->right, Order);
+        // postOrder.push_back(node->val);
+    }
+};
+
+// Q9 Preorder traversal - iterative
+class Solution {
+public:
+    vector<int> preorderTraversal(TreeNode* root) {
+        vector<int> preOrder;
+        if (root == NULL) return preOrder;
+
+        stack<TreeNode*> st;
+        st.push(root);
+        while(!st.empty()){
+            root = st.top();
+            st.pop();
+            preOrder.push_back(root->val);
+            if(root->right != NULL) st.push(root->right);
+            if(root->left != NULL) st.push(root->left);
+        }
+        return preOrder;
+    }
+};
+
+// Q8 BFs traversal: Level order traversal

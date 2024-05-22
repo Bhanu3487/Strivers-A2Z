@@ -5,7 +5,7 @@ using namespace std;
 
 // Q2. Array(easy) 
 // [ second largest element, second smalled element]
-
+// brute force: 2 passes
 vector<int> getSecondOrderElements(int n, vector<int> a) {
     int max = INT_MIN, max_2 = INT_MIN, min = INT_MAX, min_2 = INT_MAX;
         for(int i = 0; i < n; i++){
@@ -29,6 +29,20 @@ vector<int> getSecondOrderElements(int n, vector<int> a) {
     vector<int> vect{ max_2, min_2 };
     return vect;
 }
+// better : 1 pass
+	int print2largest(int arr[], int n) {
+	    int lar = -1, sec = -1;
+	    for(int i = 0; i < n; i++){
+	        if(arr[i] > lar){
+	            if(lar > sec)sec = lar;
+	            lar = arr[i];
+	        }
+	        else if(arr[i] > sec && arr[i] < lar){
+	            sec = arr[i];
+	        }
+	    }
+	    return sec;
+    }
 
 // Q3 
 // sorted array shifted by x
@@ -151,7 +165,7 @@ vector < int > sortedArray(vector < int > &a, vector < int > &b) {
         if(a[i] != k){
           result.push_back(a[i]);
           k = a[i];
-          }
+        }
         i++;
       } 
       if (a[i] > b[j]){
@@ -435,23 +449,20 @@ public:
 // brute for i <- 0 to n-1 and j <- 1 to n+1
 // find the sum of all [i...j-1] time : O(n^2) and space = O(1)
 // better: Kadane's algorithm
-// 2 variables max with the max sum of subset till idx and sum is the sum till idx from start
-// start is where sum = 0
+// 2 variables= max with the max sum of subset till idx and sum is the sum till idx from non neg ele
 //time: O(n), space : O(1)
 
-class SolutionQ4_1 {
+class Solution {
 public:
     int maxSubArray(vector<int>& nums) {
         int max = INT_MIN;
         int sum = 0;
-        int start = 0, end = 0;
         for(auto i:nums){
             sum += i;
-            if(sum > max) {max = sum; end = i;}
-            if(sum < 0){sum = 0; start = i+1;}
+            if(sum > max) max = sum;
+            if(sum<0)sum = 0;
         }
-        if(end < start) end = start;
-        return max; // returning only sum
+        return max;
     }
 };
 

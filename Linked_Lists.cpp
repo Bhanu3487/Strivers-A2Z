@@ -675,19 +675,71 @@ public:
 //-----------------------------------------2D LL MEDIUM-------------------------------------
 
 // Q1 delete all nodes == to k
-// this code didnt work for some reason
+// check for edge cases- head and tail
 // time:O(n), space: O(1)
-Node *deleteAllOccurrences(Node *head, int k) {
-    Node* temp = head;
-    while(temp != NULL){
-        if (temp->data == k) {
-            if (temp == head)head = head->next;
-            if (temp->next != NULL) temp->next->prev = temp->prev;
-            if (temp->prev != NULL)temp->prev->next = temp->next;
-            temp = temp->next;
-      }
+void deleteAllOccurOfX(struct Node** head_ref, int x) {
+        if (*head_ref == NULL) return;
+        Node* temp = *(head_ref);
+        while(temp -> next != NULL){
+            if(temp->data == x){
+                if (temp->prev == NULL) {
+                    temp->next->prev = NULL;
+                    *head_ref = temp->next;
+                }
+                else{
+                    temp->prev->next = temp->next;
+                    temp->next->prev = temp->prev;
+                }
+                temp = temp->next;
+            }
+            else temp = temp->next;
+        }
+        if(temp->data == x){
+            temp->prev->next = NULL;
+        }
+        return;
+
+// Q2
+// find pair with given sum - sorted arr
+// have a ptr at start and at end 
+// not running for some reason
+
+vector<pair<int, int>> findPairsWithGivenSum(Node *head, int target)
+{
+    vector<pair<int, int>> ans;
+    Node *left = head;
+    Node *right = head;
+    while(right->next != NULL) right = right->next;
+    while(left->prev != right){
+        int sum = left->data + right->data;
+        if(sum == target) {
+            pair<int, int> PAIR1;
+            PAIR1.first = left->data;
+            PAIR1.second = right->data;
+            ans.push_back(PAIR1);
+            left = left->next;
+            right = right->prev;
+        }
+        else if(sum < target) left = left->next;
+        else right = right->prev;
+    }
+    return {};
+}
+
+// Q3 remove duplicates - sorted arr
+Node * removeDuplicates(struct Node *head)
+{
+    Node *temp = head;
+    while(temp -> next && temp->next != NULL){
+        Node *nextNode = temp->next;
+        while(nextNode != NULL && temp->data == nextNode->data){
+            nextNode = nextNode->next;
+        }
+        temp->next = nextNode;
+        if(nextNode != NULL) nextNode->prev = temp;
     }
     return head;
 }
 
-// Q2
+
+
