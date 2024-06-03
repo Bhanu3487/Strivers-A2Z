@@ -325,4 +325,87 @@ public:
     }
 };
 
+// Q9 Subset sum
+// find the sum of all subsets ex: [2,3] - [0,2,3,5]
+// follow take and not take- pass the present idx and sum
+void helper(vector<int> arr, int start, int sum, vector<int> & ans){
+        if(start == arr.size()){
+            ans.push_back(sum);
+            return;
+        }
+            // not take
+        helper(arr, start+1, sum, ans);
+        // take
+        helper(arr, start+1, sum+arr[start], ans);
+    }
+  
+    vector<int> subsetSums(vector<int> arr, int n) {
+        vector<int> ans;
+        helper(arr, 0, 0, ans);
+        return ans;
+    }
 
+// Q10
+// take not take method- time: O(2^n) and space: O(n) - use of set - redundancy
+class Solution {
+public:
+    void helper(vector<int>& nums, int start, vector<int>& subset, set<vector<int>>& ans){
+        if(start == nums.size()){
+            ans.insert(subset);
+            return;
+        }
+
+        //not take
+        helper(nums, start+1, subset, ans);
+        //take
+        subset.push_back(nums[start]);
+        helper(nums, start+1, subset, ans);
+        subset.pop_back();
+        return;
+    }
+
+    vector<vector<int>> subsetsWithDup(vector<int>& nums) {
+        sort(nums.begin(), nums.end());
+        set<vector<int>> ans;
+        vector<int> subset;
+        helper(nums, 0, subset, ans);
+        vector<vector<int>> vc;
+        vc.assign(ans.begin(), ans.end());
+        return vc;
+    }
+};
+
+// 
+class Solution {
+public:
+    bool isdup(vector<vector<int>> &ans, vector<int>& x){
+        for(vector<int>& y : ans){
+            if(y.size() == x.size() && equal(y.begin(), y.end(), x.begin()))
+            return true;
+        }
+        return false;
+    }
+
+    vector<vector<int>> helper(vector<int>& v, int t){
+        if(t >= v.size()) return {{}};
+
+        vector<vector<int>> partialans = helper(v, t+1);
+        vector<vector<int>> ans;
+
+        for(vector<int> x:partialans){
+            ans.push_back(x);
+        }
+        for(vector<int> x:partialans){
+            x.push_back(v[t]);
+            if(!isdup(ans, x))
+                ans.push_back(x);
+            else x.pop_back();
+        }
+        return ans;
+    }
+
+    vector<vector<int>> subsetsWithDup(vector<int>& nums) {
+        sort(nums.begin(), nums.end());
+        return helper(nums, 0);
+    }
+};
