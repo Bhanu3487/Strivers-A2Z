@@ -346,7 +346,8 @@ void helper(vector<int> arr, int start, int sum, vector<int> & ans){
     }
 
 // Q10
-// take not take method- time: O(2^n) and space: O(n) - use of set - redundancy
+// power set - given vec may contain dup
+// take not take method- time(100%): O(2^n) and space: O(n) - use of set - redundancy
 class Solution {
 public:
     void helper(vector<int>& nums, int start, vector<int>& subset, set<vector<int>>& ans){
@@ -407,5 +408,233 @@ public:
     vector<vector<int>> subsetsWithDup(vector<int>& nums) {
         sort(nums.begin(), nums.end());
         return helper(nums, 0);
+    }
+};
+
+// Q11
+// using only digits 0-9(no repeatition) return the subsets of len k summing to n
+// time(100%): O(2^n), space: O(k*ans.size()) 
+class Solution {
+public:
+    void helper(int start, int nums, int k, int sum, vector<int>& subset, vector<vector<int>>& ans){
+        if(sum == 0 && nums == k)ans.push_back(subset);
+        if(start > sum || start > 9) return;
+
+        // not take
+        helper(start+1, nums, k, sum, subset, ans);
+
+        // take
+        subset.push_back(start);
+        helper(start+1, nums + 1, k, sum-start, subset, ans);
+        subset.pop_back();
+    }
+
+    vector<vector<int>> combinationSum3(int k, int n) {
+        vector<int> subset;
+        vector<vector<int>> ans;
+        helper(1, 0, k, n, subset, ans);
+        return ans;
+    }
+};
+
+// Q12 Phone letter combinations
+// digits = "23" ; output: ["ad","ae","af","bd","be","bf","cd","ce","cf"]
+// using f(n) = f(n-1) where n is the idx
+// if we have the ans for f(n-1) we just need to the the chars correspoding to digits[n] to the end of all str in f(n-1)
+// f(n-1) for prev ex is  ["a","b","c"] and corresponding chars to 3 is "def"
+// need to optimise maybe by using idx from start - like in prev methods ;instead of calling partial ans
+class Solution {
+public:
+    vector<string> letter(string digits, int start){
+        if(start == -1) return {{}};
+        vector<string> partialans = letter(digits, start-1);
+        vector<string> ans;
+
+        if(digits[start] == '2'){
+            string str = "abc";
+            for(int i = 0; i < str.size(); i++){
+                for(auto s: partialans){
+                    s.push_back(str[i]);
+                    ans.push_back(s);
+                    s.pop_back();
+                } 
+            }
+        }
+        else if(digits[start] == '3'){
+            string str = "def";
+            for(int i = 0; i < str.size(); i++){
+                for(auto s: partialans){
+                    s.push_back(str[i]);
+                    ans.push_back(s);
+                    s.pop_back();
+                } 
+            }
+        }
+        else if(digits[start] == '4'){
+            string str = "ghi";
+            for(int i = 0; i < str.size(); i++){
+                for(auto s: partialans){
+                    s.push_back(str[i]);
+                    ans.push_back(s);
+                    s.pop_back();
+                } 
+            }
+        }
+        else if(digits[start] == '5'){
+            string str = "jkl";
+            for(int i = 0; i < str.size(); i++){
+                for(auto s: partialans){
+                    s.push_back(str[i]);
+                    ans.push_back(s);
+                    s.pop_back();
+                } 
+            }
+        }
+        else if(digits[start] == '6'){
+            string str = "mno";
+            for(int i = 0; i < str.size(); i++){
+                for(auto s: partialans){
+                    s.push_back(str[i]);
+                    ans.push_back(s);
+                    s.pop_back();
+                } 
+            }
+        }
+        else if(digits[start] == '7'){
+            string str = "pqrs";
+            for(int i = 0; i < str.size(); i++){
+                for(auto s: partialans){
+                    s.push_back(str[i]);
+                    ans.push_back(s);
+                    s.pop_back();
+                } 
+            }
+        }
+        else if(digits[start] == '8'){
+            string str = "tuv";
+            for(int i = 0; i < str.size(); i++){
+                for(auto s: partialans){
+                    s.push_back(str[i]);
+                    ans.push_back(s);
+                    s.pop_back();
+                } 
+            }
+        }
+        else if(digits[start] == '9'){
+            string str = "wxyz";
+            for(int i = 0; i < str.size(); i++){
+                for(auto s: partialans){
+                    s.push_back(str[i]);
+                    ans.push_back(s);
+                    s.pop_back();
+                } 
+            }
+        }
+        return ans;
+    }
+
+    vector<string> letterCombinations(string digits) {
+        if(digits.size() == 0)return {};
+        return letter(digits, digits.size()-1);
+    }
+};
+
+
+// 2 approaches for recursion
+// finding f(n-1) and using it in f(n)
+// iterating - take. not take
+
+
+// -------------------------------------------HARD----------------------------------------------------------
+
+// When you have many options with multiple possibilities like power set (take not take) etc or as in hard q2 - use recursion
+
+// Q1
+class Solution {
+public:
+    bool isPalindrome(string s){
+        if(s.size() == 0)return true;
+        for(int i = 0; i < s.size()/2; i++){
+            if(s[i] != s[s.size()-1-i])return false;
+        }
+        return true;
+    }
+
+    void helper(const string& s, int idx, vector<string>& substr, vector<vector<string>>& ans) {
+        if (idx == s.size()) {
+            ans.push_back(substr);
+            return;
+        }
+        
+        for (int i = idx; i < s.size(); ++i) {
+            string currentStr = s.substr(idx, i - idx + 1);
+            if (isPalindrome(currentStr)) {
+                substr.push_back(currentStr);
+                helper(s, i + 1, substr, ans);
+                substr.pop_back();
+            }
+        }
+    }
+
+    vector<vector<string>> partition(string s) {
+        vector<vector<string>> ans;
+        vector<string> substr;
+        helper(s, 0, substr, ans);
+        return ans;
+    }
+};
+
+// Q2 
+// given a mxn board with chars and a word and need to find if there is any path horz or vert to trace word 
+// ex. [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]. word ="ABCCED" ans- true(rrrddl), rep of a pos not allowed
+// find the see (word[0]) from there look for next char on r,l,u,d and repeat- each time when found mark the location, if path doesnt exist revert the org char (at this point we can also use for backtrack) 
+class Solution {
+public:
+    int Search(vector<char> &vec, char c, int start){
+        cout << start << endl;
+        for(int i = start; i < vec.size(); i++){
+            if(vec[i] == c){
+                vec[i] = '.';
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    bool helper(vector<vector<char>>& board, int row, int col, int idx, string word){
+        if(idx == word.size())return true;
+        // cout << row << " " << col << " " << word[idx-1] << endl;
+
+        board[row][col] = '.';
+        if(row > 0 && board[row-1][col] == word[idx]) {
+            if(helper(board, row-1, col, idx+1, word)) return true;
+        }
+        if(row < board.size()-1 && board[row+1][col] == word[idx]){
+            if (helper(board, row+1, col, idx+1, word)) return true;
+        }
+        if(col > 0 && board[row][col-1] == word[idx]) {
+            if (helper(board, row, col-1, idx+1, word)) return true;
+        }
+        if(col < board[0].size()-1 && board[row][col+1] == word[idx]){
+            if (helper(board, row, col+1, idx+1, word)) return true;
+        }
+        board[row][col] = word[idx-1];
+
+        return false;
+    }
+
+    bool exist(vector<vector<char>>& board, string word) {
+        int m = board.size(), n = board[0].size();
+        char c = word[0];
+        int i = 0;
+        while(i < m){
+            int col = Search(board[i], c, 0);
+            while(col != -1){
+                if(helper(board, i, col, 1, word)) return true;
+                col = Search(board[i], c, col+1);
+            }
+            i++;
+        }
+        return false;
     }
 };
