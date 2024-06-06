@@ -638,3 +638,77 @@ public:
         return false;
     }
 };
+
+// --------------------HARD-----------------------------------
+// Q6 kth permutation sequence
+// notice that n! had n (n-1)'s, so depending on the k permutation needed we can find out the 1st digit (i.e, the 1st (n-1) permutations have the smallest num as the leftmost digit and so on)
+// in  that way, we r ble to reduce the num of digits and the num of permutation needed
+// time(100%): O(n) {each recursion n dec by 1}, space: O(n) { vec and stack space}
+class Solution {
+public:
+    int factorial(int i){
+        if(i < 3)return i;
+        else if (i == 3)return 6;
+        else if (i == 4)return 24;
+        else if (i == 5)return 120;
+        else if (i == 6)return 720;
+        else if (i == 7)return 5040;
+        else if (i == 8)return 40320;
+        else return 362880;
+    }
+
+    string helper(int n, int k, vector<int>order){
+        if(n == 1) return to_string(order[0]);
+        int fact = factorial(n-1);
+        int q = k/fact;
+        k = k%fact;
+
+        string digit = to_string(order[q]);
+        for(int i = q; i < n-1; i++){
+            order[i] = order[i+1];
+        }
+
+        return (digit + helper(n-1, k, order));
+    }
+
+    string getPermutation(int n, int k) {
+        vector<int>order;
+        for(int i = 0; i < n; i++){
+            order.push_back(i+1);
+        }
+        return helper(n, k-1, order);
+    }
+};
+
+// Recursion and Backtracking
+// Q1 All permutations
+// have a start variable t denoting the idx till which permutation has occured, similar to tower of hanoi
+class Solution {
+public:
+    void swap(int* a, int* b){
+        int temp = *a;
+        *a = *b;
+        *b = temp;
+    }
+
+    void helper(vector<int> &v, int t, vector<vector<int>> &result){
+        if(t == v.size()){
+            result.push_back(v);
+            return;
+        }
+
+        helper(v, t+1,result);
+        for(int i = t+1; i < v.size(); i++){
+            swap(&v[t], &v[i]);
+            helper(v, t+1, result);
+            swap(&v[t], &v[i]);
+        }
+        return;
+    }
+
+    vector<vector<int>> permute(vector<int>& nums) {
+        vector<vector<int>> result;
+        helper(nums, 0, result);
+        return result;
+    }
+};

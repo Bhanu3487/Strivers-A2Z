@@ -1,6 +1,6 @@
 #include <iostream>
 #include <bits/stdc++.h>
-using namepace std;
+using namespace std;
 
 // basics - brute force - conveert to binary
 //swapping with no temp var - using xor
@@ -76,3 +76,58 @@ public:
         return sign?q:-q;
     }
 };
+
+// -------------------INTERVIEW--------------------------------------------
+// Q1
+// num of bits needed to be flipped to convet start to goal
+// check the once digit each time and do right shift
+// time: O(log(n+m)), space: O(1)
+class Solution {
+public:
+    int minBitFlips(int start, int goal) {
+        int ans = 0;
+        while(start != 0 || goal != 0){
+            int k = ((start & 1) ^ (goal & 1));
+            if(k == 1) ans++;
+            goal = (goal >> 1);
+            start = (start >> 1); 
+        }  
+        return ans;  
+    }
+};
+
+// Q2 find the only num which appears odd num of time (all other nums in arr appear even num of times)
+// xor
+class Solution {
+public:
+    int singleNumber(vector<int>& nums) {
+        int ans = 0;
+        for(int i = 0; i < nums.size(); i++){
+            ans = ans ^ nums[i];
+        }
+        return ans;
+    }
+};
+
+// Q3 subset sum
+
+
+//Q4 xor l to r
+// given [L,R] inclusive find xor from l to r
+// in O(1) time and space
+// mathematical - find pattern; idea: even repeat of nums when xored become 0
+class Solution {
+  public:
+    int xor12n(int i){
+        if(i%4 == 1) return 1;
+        if(i%4 == 2) return i+1;
+        if(i%4 == 3) return 0;
+        else return i;
+    }
+  
+    int findXOR(int l, int r) {
+        return (xor12n(l-1) ^ xor12n(r));
+    }
+};
+
+
