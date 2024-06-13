@@ -712,3 +712,93 @@ public:
         return result;
     }
 };
+
+// Q3 Sudoku Solver
+// write funcs to check if the current block(row, col) is valid
+// write a helper func, which has a base case - if(row>9)return true (if it was able to reach row 9, all the other blocks are filled)
+// if the block is filled, recurse to find the next empty blocl
+// if the block is empty, iterate values from 1 to 9 and check validity, if yes continue to next empty block 
+// else backtrack and continue in for loop
+
+class Solution {
+public:
+    bool check_box(const vector<vector<char>>& board, int row, int col){
+        int box_row = row/3;
+        int box_col = col/3;
+
+        for(int i = (3*box_row); i < (3*(box_row+1)); i++){
+            for(int j = (3*box_col); j < (3*(box_col+1)); j++){
+                if(i != row && j != col){
+                    if(board[i][j] == board[row][col]) return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    bool check_row(const vector<vector<char>>& board, int row, int col){
+        for(int i = 0; i < 9; i++){
+            if(i != col){
+                if(board[row][i] == board[row][col]) return false;
+            }
+        }
+        return true;
+    }
+
+    bool check_col(const vector<vector<char>>& board, int row, int col){
+        for(int i = 0; i < 9; i++){
+            if(i != row){
+                if(board[i][col] == board[row][col]) return false;
+            }
+        }
+        return true;
+    }
+
+    bool helper(vector<vector<char>>& board, int row, int col){
+        if (row == 9) return true;
+
+        if (board[row][col] != '.') {
+            if (col == 8) {
+                if (helper(board, row + 1, 0)) return true;
+            } else {
+                if (helper(board, row, col + 1)) return true;
+            }
+            return false;
+        }
+
+        for (char num = '1'; num <= '9'; ++num) {
+            board[row][col] = num;
+            if (check_row(board, row, col) && check_col(board, row, col) && check_box(board, row, col)) {
+                if (col == 8) {
+                    if (helper(board, row + 1, 0)) return true;
+                } else {
+                    if (helper(board, row, col + 1)) return true;
+                }
+            }
+            board[row][col] = '.'; // Backtrack
+        }
+
+        return false;
+    }
+
+    void solveSudoku(vector<vector<char>>& board) {
+        for(int i = 0; i < 9; i++){
+            for(int j = 0; j < 9; j++){
+                if(board[i][j] == '.'){
+                    cout <<i << " "<< j << " ";
+                    helper(board, i, j);
+                    cout << board[i][j] <<endl;
+                }
+            }
+        }
+        cout << "----";
+        return;
+        for(int i = 0; i < 9; i++){
+            if(board[8][8] == '.'){
+                board[8][8] = '9';
+                if(!check_box(board, 8, 8)) board[8][8] = '.';
+            }
+        }
+        cout<<board[8][8];
+    }
+};
