@@ -713,6 +713,78 @@ public:
     }
 };
 
+
+//Q2 N-Queens
+
+// write funcs to chekc hor, ver and BOTH diags
+// create herlper function which checks a pos [row] passed to it, runs a for loop for all [given row][cols] using above funcs and it passes calls for h(row+1) - next row, cuz we just placed in cur row, and from 0th col to check all cols
+
+class Solution {
+public:
+    bool check_hor(const vector<string>& board, int row, int col){
+        for(int i = 0; i < board.size(); i++){
+            if(board[row][i] == 'Q' && i != col)return false;
+        }
+        return true;
+    }
+
+    bool check_ver(const vector<string>& board, int row, int col){
+        for(int i = 0; i < board.size(); i++){
+            if(board[i][col] == 'Q' && i != row)return false;
+        }
+        return true;
+    }
+
+    bool check_diag(const vector<string>& board, int row, int col){
+        int sum = row+col, start = 0, end = board.size()-1;
+        if(sum > board.size()-1) start = sum-(board.size()-1);
+        if(sum < board.size()-1) end = sum;
+
+        for(int i = start; i <= end; i++){
+            if(board[i][sum-i] == 'Q' && i != row)return false;
+        }
+        
+        int diff = row-col;
+        start = 0, end = board.size()-1;
+        if(diff > 0) start = diff;
+        if(diff < 0) end = board.size()-1+diff;
+
+        for(int i = start; i <= end; i++){
+            if(board[i][i-diff] == 'Q' && i != row)return false;
+        }
+        return true;
+    }
+
+    void helper(vector<vector<string>>& ans, vector<string>& board, int row){
+        if(row == board.size() && row == board.size()){ans.push_back(board); return;}
+        // for(int i = 0; i < board.size(); i++){
+        //     for(int j = 0; j < board.size(); j++){
+        //         cout<<board[i][j]<<" ";
+        //     }
+        //     cout<<endl;
+        // }
+        // cout<<"------------------------------------"<<endl;
+
+        for(int i = 0; i < board.size(); i++){
+            board[row][i] = 'Q';
+            if(check_hor( board, row, i) && check_ver( board, row, i) && check_diag( board, row, i)){
+                if(row < board.size()) helper(ans, board, row+1);
+            }
+            board[row][i] = '.';
+        }
+    }
+
+    vector<vector<string>> solveNQueens(int n) {
+        vector<vector<string>> ans;
+        string s(n, '.');
+        vector<string> board(n, s);
+        helper(ans, board, 0);
+        
+        return ans;
+    }
+};
+
+
 // Q3 Sudoku Solver
 // write funcs to check if the current block(row, col) is valid
 // write a helper func, which has a base case - if(row>9)return true (if it was able to reach row 9, all the other blocks are filled)
@@ -802,3 +874,137 @@ public:
         cout<<board[8][8];
     }
 };
+
+// Q5 Rat maze
+// we need to return all possible paths from (0,0) to (n-1,n-1) so need to maintain a str path of tracking current path and a vis arr O(N^2) marking visited cells
+// concatinate str no need to push_back
+
+// time: O(3^(N^2))- each cell (n**2) has 3 possible moves max, space- O(L*X)L-length of max path, X - no. of strs
+void helper(vector<vector<int>> &m, int n, string path, int row, int col,vector<string> & ans, vector<vector<int>> &vis){
+        if(row == n-1 && col == n-1){
+            ans.push_back(path);
+            return;
+        }
+        //right
+        if(col<n-1 && m[row][col+1] != 0 && vis[row][col] == 0){
+            vis[row][col] = 1;
+            helper(m,n,path+'R', row, col+1, ans, vis);
+            vis[row][col] = 0;
+        }
+        
+        //down
+        if(row<n-1 && m[row+1][col] != 0 && vis[row][col] == 0){
+            vis[row][col] = 1;
+            helper(m,n,path+'D', row+1, col, ans, vis);
+            vis[row][col] = 0;
+        }
+        
+        //left
+        if(col>0 && m[row][col-1] != 0 && vis[row][col] == 0){
+            vis[row][col] = 1;
+            helper(m,n,path+'L', row, col-1, ans, vis);
+            vis[row][col] = 0;
+        }
+        
+        //up
+        if(row > 0 && m[row-1][col] != 0 && vis[row][col] == 0){
+            vis[row][col] = 1;
+            helper(m,n,path+'U', row-1, col, ans, vis);
+            vis[row][col] = 0;
+        }
+    }
+    
+    vector<string> findPath(vector<vector<int>> &m, int n) {
+        string path = "";
+        vector<string>ans;
+        if(m[0][0] == 0) return ans;
+        vector<vector<int>> vis(n, vector<int>(n,0));
+        helper(m,n,"", 0, 0, ans, vis);
+        return ans;
+    }
+
+//Q6 Word Break
+// iteration
+// Function to check if a word exists in the dictionary using binary search
+bool check(vector<string> &dictionary, const string &s) {
+    int l = 0, r = dictionary.size() - 1;
+    while (l <= r) {
+        int m = (l + r) / 2;
+        if (dictionary[m] == s) return true;
+        else if (dictionary[m] < s) l = m + 1;
+        else r = m - 1;
+    }
+    return false;
+}
+
+// Helper function to perform the recursive backtracking
+void helper(vector<string> &dict, string &s, int start, string str, vector<string> &ans) {
+    if (start == s.size()) {
+        ans.push_back(str.substr(0, str.size() - 1)); // Remove the trailing space
+        return;
+    }
+
+    for (int end = start; end < s.size(); ++end) {
+        string word = s.substr(start, end - start + 1);
+        if (check(dict, word)) {
+            helper(dict, s, end + 1, str + word + " ", ans);
+        }
+    }
+}
+
+// Main function to find all possible sentences
+vector<string> wordBreak(string &s, vector<string> &dictionary) {
+    vector<string> ans;
+    sort(dictionary.begin(), dictionary.end()); // Sort the dictionary for binary search
+    helper(dictionary, s, 0, "", ans);
+    return ans;
+}
+
+//recursive
+//  This approach might be slightly more efficient due to fewer function calls. By directly manipulating indices, it avoids some of the redundancy of method 1
+
+// Function to check if a word exists in the dictionary using binary search
+bool check(vector<string> &dictionary, const string &s) {
+    int l = 0, r = dictionary.size() - 1;
+    while (l <= r) {
+        int m = (l + r) / 2;
+        if (dictionary[m] == s) return true;
+        else if (dictionary[m] < s) l = m + 1;
+        else r = m - 1;
+    }
+    return false;
+}
+
+// Helper function to perform the recursive backtracking
+void helper(vector<string> &dict, string &s, int start, int end, string str, vector<string> &ans) {
+    if (end == s.size()) {
+        if (check(dict, s.substr(start, end - start))) {
+            ans.push_back(str + s.substr(start, end - start));
+        }
+        return;
+    }
+
+    // No break, continue expanding the end index
+    helper(dict, s, start, end + 1, str, ans);
+
+    // Break, check if the substring is valid
+    if (check(dict, s.substr(start, end - start + 1))) {
+        helper(dict, s, end + 1, end + 1, str + s.substr(start, end - start + 1) + " ", ans);
+    }
+}
+
+// Main function to find all possible sentences
+vector<string> wordBreak(string &s, vector<string> &dictionary) {
+    vector<string> ans;
+    sort(dictionary.begin(), dictionary.end()); // Sort the dictionary for binary search
+    helper(dictionary, s, 0, 0, "", ans);
+    return ans;
+}
+// in helper func
+//Why Value: str: The str parameter is passed by value because it represents the current sentence being constructed during the recursion. Each recursive call creates a new version of str that includes the new word being added to the sentence.
+// Why Reference: s and dict :The input string s is passed by reference for the same reasons as the dictionary. If s is large, copying it would be inefficient. Passing by reference allows the function to work directly with the original string, improving performance.
+// Why Reference: ans: The result vector ans is passed by reference to allow the function to modify the original vector and add results to it. This avoids the overhead of copying the vector and ensures that the changes made inside the function are reflected outside.
+
+//no break before break has significant time complexity reduction
+// str must be passed by value
+
