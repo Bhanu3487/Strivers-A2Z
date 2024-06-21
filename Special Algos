@@ -8,3 +8,6 @@
                   - 
 
 // Kadane's algorithm - maxsubrray
+
+// sliding window- in 2ptr when asked for the max of something, we slide (i.e inc r and dec l) while maintaining the len since we want max len (it either remains same or inc)
+// ex - 2ptr Q3 fruits in basket
