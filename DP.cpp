@@ -466,12 +466,12 @@ public:
 
 
 // DP with Subsequences ---------------------------------------------------------------------------
-// Q1 - subsequence sum
+// Q1 - subsequence sum DP-14
+// Does a subseq with sum exist in arr
 
 // 2D DP Memoization
-
 int func(vector<int>& arr, int idx, int sum, vector<vector<int>>& dp) {
-    if (sum == 0) return 1;
+    if (sum == 0) return 1;             
     if (idx == 0) return (sum == arr[0]);
     if (dp[idx][sum] != -1) return dp[idx][sum];
 
@@ -492,20 +492,21 @@ bool isSubsetSum(vector<int>& arr, int sum) {
 // 2D DP tabulation
 bool isSubsetSum(vector<int>& arr, int sum) {
         vector<vector<bool>> dp(arr.size(), vector<bool>(sum+1, false));
-        for(int i = 0; i < arr.size(); i++)dp[i][0] = true;
-        dp[0][arr[0]] = true;
+        for(int i = 0; i < arr.size(); i++)dp[i][0] = true; //prev[0] - 1st col in 2d
+        dp[0][arr[0]] = true;                               //prev[i] - 1st row in 2d - except 2 col 0 and arr[0] all are false
         for(int i = 1; i < arr.size(); i++){
             for(int t = 1; t <= sum; t++){
-                bool not_take = dp[i-1][t];
+                bool not_take = dp[i-1][t];                 //prev[t]
                 bool take = false;
-                if(arr[i] <= t)take = dp[i-1][t-arr[i]];
-                dp[i][t] = take | not_take;
-            }
+                if(arr[i] <= t)take = dp[i-1][t-arr[i]];    //prev[t-arr[i]]
+                dp[i][t] = take | not_take;                 //cur[t]
+            }                                               //prev = cur
         }
-        return dp[arr.size()-1][sum];
+        return dp[arr.size()-1][sum];                       //cur[sum]
     }
 
 // 1D DP - Space Optimization
+// since the above 2d tabulation has dp(i) <= dp(i-1) only and not i, we can use only 2 1d arr prev and cur.
 bool isSubsetSum(vector<int>& arr, int sum) {
     int n = arr.size();
     vector<bool> dp(sum + 1, false); // dp[i] will be true if there is a subset of arr that sums up to i
@@ -520,11 +521,10 @@ bool isSubsetSum(vector<int>& arr, int sum) {
             }
         }
     }
-    
     return dp[sum];
 }
 
-// Q2 - sum of sunsequences
+// Q2 - Partition equal subset sum -DP- 15
 // Recursion -TLE - not the type of recursion that can be converted to dp bcz it a binary tree -> NO OVERLAPPINGS
 class Solution {
 public:
@@ -556,6 +556,8 @@ bool canPartition(vector<int>& nums) {
     S = S/2;
     sort(nums.begin(),nums.end());
     if(nums[0]>S)return false;
+
+    //Q1
     vector<vector<bool>>dp(n, vector<bool>(S+1, 0));
     for(int i = 0; i < n; i++)dp[i][0] = 0;
     dp[0][nums[0]] = true;
@@ -570,7 +572,444 @@ bool canPartition(vector<int>& nums) {
     return dp[n-1][S];
 }
 
-// Q7 - Coin Change
+
+// Q4 - Count Subsets with sum K
+// if the arr contains only +ve nums - simple 
+
+// if the arr contains non-neg int
+// 2D DP Memoization
+class Solution{
+	public:
+	int mod = 1e9 + 7;
+    int func(vector<int> nums, int idx, int target, vector<vector<int>>& dp) {
+        if (idx < 0) return 0;
+    
+        if (dp[idx][target] != -1) return dp[idx][target];
+    
+        int notTake = func(nums, idx - 1, target, dp);
+        
+        int take = 0;
+        if (nums[idx] <= target) take = func(nums, idx - 1, target - nums[idx], dp);
+    
+        return dp[idx][target] = (take + notTake)%mod;
+    }
+    
+    int perfectSum(int arr[], int n, int target) {
+        vector<int> nums(arr, arr + n);
+        sort(nums.begin(), nums.end());
+        vector<vector<int>> dp(n, vector<int>(target + 1, -1));
+    
+        for (int i = 0; i < n; i++) dp[i][0] = 1; 
+        if (nums[0] <= target) dp[0][nums[0]] = 1;
+    
+        int ans = func(nums, n - 1, target, dp);
+         
+        // the above code is enough if only for +ve, if a zero is present it doubles the subsets
+        int zero = 0;
+        for(int i = 0; i < n; i++){
+            if(nums[i] > 0)break;
+            zero++;
+        }
+        zero = (1 << zero);
+        return (ans*zero)%mod;
+    }
+};
+
+// striver
+// 2D Memorization
+class Solution{
+	public:
+    int mod = 1e9 + 7;
+	int func(int idx, int sum, vector<int> &nums, vector<vector<int>>& dp){
+	    if(idx == 0){
+	        if(sum == 0 && nums[0] == 0)return 2;           // dont do if(sum == nums[i]) - thinking it will save time, its incorrect. can have ele 1,1,2 
+	        if(sum == 0 || sum == nums[0])return 1;
+	        return 0;
+	    }
+	    
+	    if(dp[idx][sum] != -1) return dp[idx][sum];
+	    
+	    int notTake = func(idx-1, sum, nums, dp);
+	    int take = 0;
+	    if(nums[idx] <= sum)take = func(idx-1, sum-nums[idx], nums, dp);
+	    
+	    return dp[idx][sum] = (take+notTake)%mod;
+	}
+	
+	int perfectSum(int arr[], int n, int sum){
+	    vector<vector<int>> dp(n + 1, vector<int>(sum+1, -1));
+	    vector<int> nums(arr, arr + n);
+        return func(n-1, sum, nums, dp);
+	}
+};
+
+// 2D Tabulation
+class Solution{
+int perfectSum(vector<int>& arr, int n, int sum) {
+        vector<vector<int>> dp(n, vector<int>(sum + 1, 0));
+    
+        if (arr[0] == 0) dp[0][0] = 2; 
+        else dp[0][0] = 1; 
+    
+        if (arr[0] != 0 && arr[0] <= sum) dp[0][arr[0]] = 1; 
+            
+        for (int i = 1; i < n; i++) {
+            for (int k = 0; k <= sum; k++) {
+                int notTake = dp[i - 1][k];
+                int take = 0;
+                if (arr[i] <= k) take = dp[i - 1][k - arr[i]];
+                dp[i][k] = take + notTake;
+            }
+        }
+    
+        return dp[n - 1][sum];
+    }
+};
+
+// Q5- Count Partitions with diff k - DP-18
+// 2D memoization (TLE)
+class Solution{
+public:
+    int func(vector<int> nums, int idx, int target, vector<vector<int>>& dp) {
+        if(idx == 0){
+	        if(target == 0 && nums[0] == 0)return 2;           // dont do if(sum == nums[i]) - thinking it will save time, its incorrect. can have ele 1,1,2 
+	        if(target == 0 || target == nums[0])return 1;
+	        return 0;
+	    }
+    
+        if (dp[idx][target] != -1) return dp[idx][target];
+        
+        int notTake = func(nums, idx - 1, target, dp);
+        
+        int take = 0;
+        if (nums[idx] <= target) take = func(nums, idx - 1, target - nums[idx], dp);
+
+        return dp[idx][target] = (take + notTake);
+    }
+    
+    int countPartitions(int n, int d, vector<int>& arr) {
+        int total = 0;
+        for(int i = 0; i < n; i++)total += arr[i]; 
+        
+        if(d%2 != total%2)return 0;
+        int target = (d+total)/2;
+        vector<vector<int>> dp(n, vector<int>(target+1, -1));
+        
+        return func(arr, n-1, target, dp);
+    }
+};
+
+//from Q4 - striver  
+class Solution{
+  public:
+    int mod = 1e9 + 7;
+	int func(int idx, int sum, vector<int> &nums, vector<vector<int>>& dp){
+	    if(idx == 0){
+	        if(sum == 0 && nums[0] == 0)return 2;           // dont do if(sum == nums[i]) - thinking it will save time, its incorrect. can have ele 1,1,2 
+	        if(sum == 0 || sum == nums[0])return 1;
+	        return 0;
+	    }
+	    
+	    if(dp[idx][sum] != -1) return dp[idx][sum];
+	    
+	    int notTake = func(idx-1, sum, nums, dp);
+	    int take = 0;
+	    if(nums[idx] <= sum)take = func(idx-1, sum-nums[idx], nums, dp);
+	    
+	    return dp[idx][sum] = (take+notTake)%mod;
+	}
+	
+	int perfectSum(vector<int>& arr, int n, int sum){
+	    vector<vector<int>> dp(n + 1, vector<int>(sum+1, -1));
+        return func(n-1, sum, arr, dp);
+	}
+
+    int countPartitions(int n, int d, vector<int>& arr) {
+        int total = 0;
+        for(auto &it: arr)total += it;
+        if(total -d < 0 || (total - d) % 2 ) return false;
+        return perfectSum(arr, arr.size(), (total-d)/2);
+    }
+};
+
+// Tabulation - didnot work
+public:
+int perfectSum(vector<int>& arr, int n, int sum) {
+    vector<vector<int>> dp(n, vector<int>(sum + 1, 0));
+
+    if(arr[0] == 0) dp[0][0] = 2;
+    else dp[0][0] = 1; 
+    
+    if(arr[0] != 0 && arr[0] <= sum)dp[0][arr[0]] = 1;
+
+    for (int i = 1; i < n; i++) {
+        for (int k = 0; k <= sum; k++) {
+            int notTake = dp[i - 1][k];
+            int take = 0;
+            if (arr[i - 1] <= k) take = dp[i - 1][k - arr[i]];
+            dp[i][k] = take + notTake;
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        for (int k = 0; k <= sum; k++) {
+            cout<<dp[i][k]<<" ";
+        }
+        cout<<endl;
+    }
+
+    return dp[n-1][sum];
+}
+
+int countPartitions(int n, int d, vector<int>& arr) {
+    int total = accumulate(arr.begin(), arr.end(), 0);
+    if (total < d || (total - d) % 2 != 0) return 0;
+
+    return perfectSum(arr, n, (total - d) / 2);
+}
+
+
+// Q6 - 0-1 Knapsack - DP-19
+// fractional knapsack - greedy - sort by val/wt and take 
+
+// 2D Memoization
+// dp[idx][w] = the max val of items of wt w that can be from val[0...idx] (w < W)
+// time :O(2^n), space:O(nW+n)
+class Solution{
+    public:
+    int func(int wt[], int val[], int n, int idx, int w, vector<vector<int>>& dp){
+        if(idx == 0) return dp[0][w] = (wt[0] <= w)? val[0]:0;
+        if(w == 0)return 0;
+        if (dp[idx][w] != -1) return dp[idx][w];
+        
+        int notTake = func(wt, val, n, idx-1, w, dp);
+        
+        int take = 0;
+        if(wt[idx] <= w) {
+            take = func(wt, val, n, idx-1, w-wt[idx], dp);
+            take += val[idx];
+        }
+        return dp[idx][w] = max(take, notTake);
+    }
+
+    int knapSack(int W, int wt[], int val[], int n) { 
+        vector<vector<int>>dp(n, vector<int> (W+1, -1));
+        return func(wt, val, n, n-1, W, dp);;
+    }
+};
+
+// 2D tabulation
+// time: O(n*W), space:O(n*W)
+class Solution {
+    public:
+    int knapSack(int W, int wt[], int val[], int n) { 
+        vector<vector<int>>dp(n, vector<int> (W+1, 0));
+        for(int i = 0; i <= W; i++) dp[0][i] = (wt[0] <= i)? val[0]:0;
+        for(int i = 0; i < n; i++) dp[i][0] = 0;
+        
+        for(int idx = 1; idx < n; idx++){
+            for(int w = 1; w <= W; w++){
+                int notTake = dp[idx-1][w];
+                int take = 0;
+                if(wt[idx] <= w) {
+                    take = dp[idx-1][w-wt[idx]];
+                    take += val[idx];
+                }
+                dp[idx][w] = max(take, notTake);
+            }
+        }
+        return  dp[n-1][W];
+    }
+};
+
+// Space Optimization - 2 row
+// anytime dp[i][j] depends on dp[i-1][j]
+// use prev cur dp method
+
+class Solution {
+    public:
+    int knapSack(int W, int wt[], int val[], int n) { 
+        vector<int> prev(W+1, 0), cur(W+1, 0);
+
+        for(int w = 0; w <= W; w++) prev[w] = (wt[0] <= w)? val[0]:0;
+
+        for(int idx = 1; idx < n; idx++){
+            for(int w = 1; w <= W; w++){
+                int notTake = prev[w];
+                int take = 0;
+                if(wt[idx] <= w) {
+                    take = prev[w-wt[idx]];
+                    take += val[idx];
+                }
+                cur[w] = max(take, notTake);
+            }
+            prev =cur;
+        }
+        return  prev[W];
+    }
+};
+
+// Space Optimisation - 1 row
+// cur[w] depends on prev[w] and prev[w-wt[i]] also cur[w] doesnt depend on any of the other valus in that arr(row/cur)
+// using the same row 1.e prev instaed of using cur
+// for cur[w] we req prev[w] and prev[w-wt[i]] so we can replace prev[w] with cur[w] and similarly prev[w-1] with cur[w-1] instead of using the the cur array
+// but we can do it from left to right i.e fill prev[1] with cur[i] etc bcz in that case if cur[2] depends on prev[1] it is not more there, it has been override
+class Solution {
+    public:
+    int knapSack(int W, int wt[], int val[], int n) { 
+        vector<int> prev(W+1, 0);
+
+        for(int w = 0; w <= W; w++) prev[w] = (wt[0] <= w)? val[0]:0;
+
+        for(int idx = 1; idx < n; idx++){
+            for(int w = W; w >= 0; w--){        //------------important change
+                int notTake = prev[w];
+                int take = 0;
+                if(wt[idx] <= w) {
+                    take = prev[w-wt[idx]];
+                    take += val[idx];
+                }
+                prev[w] = max(take, notTake);
+            }
+            // prev = cur                       //------------important change
+        }
+        return  prev[W];
+    }
+};
+
+
+// Q7 - minimum coins DP-20
+// the min num of coins req to pay amount
+// 1D Memoization
+class Solution {
+public:
+    int coinChange(vector<int>& coins, int amount) {
+        int n = coins.size();
+        
+        vector<int> dp(amount + 1, INT_MAX); 
+        dp[0] = 0; 
+        
+        for (int i = 1; i <= amount; i++) {
+            for (int j = 0; j < n; j++) {
+                if (coins[j] <= i && dp[i - coins[j]] != INT_MAX) {
+                    dp[i] = min(dp[i], dp[i - coins[j]] + 1);
+                }
+            }
+        }
+        
+        return dp[amount] == INT_MAX ? -1 : dp[amount];
+    }
+};
+
+// Q8 - Target Sum - DP-21
+// all the ele in nums can either be add or sub to get target
+// 2D - Memoization
+// time:O(2^n), space:O(n*(2*target+1))
+class Solution {
+public:
+    int func(vector<int>& nums, int target, int idx, vector<vector<int>>& dp){
+        int offset = dp[0].size()/2;
+        if(offset+target >= dp[0].size() || offset+target < 0) return 0;
+        if(idx == 0 && nums[0] == 0 && target == 0)return 2;                //------------- edge case 
+        if(idx == 0) return dp[0][offset+target] = (target == nums[0] || target == 0-nums[0])? 1:0;
+
+        if(dp[idx][offset+target] != -1) return dp[idx][offset+target];
+
+        int plus = func(nums, target-nums[idx],idx-1, dp);
+        int minus = func(nums, target+nums[idx], idx-1, dp);
+        return dp[idx][offset+target] = plus + minus;
+    }
+
+    int findTargetSumWays(vector<int>& nums, int target) {
+        int n = nums.size();
+        int sum = 0;
+        for(int i = 0 ; i < n; i++){
+            sum += nums[i];
+        }
+
+        vector<vector<int>>dp(n, vector<int>(2*sum+1, -1));
+        return func(nums, target, n-1, dp);
+    }
+};
+
+// 2D tabulation
+// 
+class Solution {
+public:
+    int findTargetSumWays(vector<int>& nums, int target) {
+        int n = nums.size();
+        int sum = 0;
+        for (int num : nums) {
+            sum += num;
+        }
+        
+        if (abs(target) > sum) return 0;  // If the target is out of possible sum range, return 0.
+        
+        vector<vector<int>> dp(n, vector<int>(2 * sum + 1, 0));
+        
+        // Initialize base cases
+        dp[0][sum + nums[0]] += 1;  // Case for adding nums[0]
+        dp[0][sum - nums[0]] += 1;  // Case for subtracting nums[0]
+        
+        
+        for (int i = 1; i < n; ++i) {
+            for (int j = -sum; j <= sum; ++j) {
+                if (sum + j - nums[i] >= 0 && sum + j - nums[i] < 2 * sum + 1) {
+                    dp[i][sum + j] += dp[i - 1][sum + j - nums[i]];
+                }
+                if (sum + j + nums[i] >= 0 && sum + j + nums[i] < 2 * sum + 1) {
+                    dp[i][sum + j] += dp[i - 1][sum + j + nums[i]];
+                }
+            }
+        }
+        
+        return dp[n - 1][sum + target];
+    }
+};
+// or
+// can also have 
+// if (dp[i - 1][sum + j] > 0) {
+//     dp[i][sum + j + nums[i]] += dp[i - 1][sum + j];
+//     dp[i][sum + j - nums[i]] += dp[i - 1][sum + j];
+// }
+
+// Space Optimization 2 rows
+class Solution {
+public:
+    int findTargetSumWays(vector<int>& nums, int target) {
+        int n = nums.size();
+        int sum = 0;
+        for (int num : nums) {
+            sum += num;
+        }
+        
+        if (abs(target) > sum) return 0;  // If the target is out of possible sum range, return 0.
+        
+        vector<int> prev(2 * sum + 1, 0), cur(2 * sum + 1, 0);
+        
+        // Initialize base cases
+        prev[sum + nums[0]] += 1;  // Case for adding nums[0]
+        prev[sum - nums[0]] += 1;  // Case for subtracting nums[0]
+        if(n == 1)return prev[sum + nums[0]];
+
+        for (int i = 1; i < n; ++i) {
+            fill(cur.begin(), cur.end(), 0);  // Reset cur array
+            for (int j = -sum; j <= sum; ++j) {
+                if (sum + j - nums[i] >= 0 && sum + j - nums[i] < 2 * sum + 1) {
+                    cur[sum + j] += prev[sum + j - nums[i]];
+                }
+                if (sum + j + nums[i] >= 0 && sum + j + nums[i] < 2 * sum + 1) {
+                    cur[sum + j] += prev[sum + j + nums[i]];
+                }
+            }
+            prev = cur;
+        }
+        return cur[sum + target];
+    }
+};
+
+
+// Q9 - Coin Change - DP -22
 int change(int amount, vector<int>& coins) {
     vector<int> dp(amount + 1, 0);
     dp[0] = 1; // There's one way to make the amount 0 (using no coins)
@@ -583,3 +1022,99 @@ int change(int amount, vector<int>& coins) {
 
     return dp[amount];
 }
+
+// Q10- Unbounded knapsack - DP - 23
+// same as 0-1 knapsack except, in case of take, the idx remains at the same idx doesnt dec - because even after taking an item, he can take it again
+// the above cond. applies for all infinite supply/unbounded dp problems.
+// 2D Memoization
+// time:O(2^n), space: O(W)
+class Solution{
+public:
+    int func(int wt[], int val[], int n, int idx, int w, vector<vector<int>>& dp){
+        if(idx == 0) {
+            return (w/wt[0])*val[0];
+        }
+        if(w == 0)return 0;
+        if (dp[idx][w] != -1) return dp[idx][w];
+        
+        int notTake = func(wt, val, n, idx-1, w, dp);
+        
+        int take = 0;
+        if(wt[idx] <= w) {
+            take = func(wt, val, n, idx, w-wt[idx], dp);
+            take += val[idx];
+        }
+        return dp[idx][w] = max(take, notTake);
+    }
+    
+    int knapSack(int n, int W, int val[], int wt[]){
+        vector<vector<int>>dp(n, vector<int> (W+1, -1));
+        return func(wt, val, n, n-1, W, dp);
+    }
+};
+
+// Tabulation
+class Solution{
+public:
+    
+    int knapSack(int n, int W, int val[], int wt[]){
+        vector<vector<int>>dp(n, vector<int> (W+1, 0));
+        
+        for(int w = 0; w <= W; w++) dp[0][w] = (w/wt[0])*val[0];
+        
+        for(int idx = 1; idx < n; idx++){
+            for(int w = 0; w <= W; w++){
+                int notTake = dp[idx-1][w];
+                int take = 0;
+                if(wt[idx] <= w) take = dp[idx][w-wt[idx]] + val[idx];
+                dp[idx][w] = max(take, notTake);
+            }
+        }
+        
+        return dp[n-1][W];
+    }
+};
+
+// Space Optimisation to 2 1D arrays - when dp(idx) <= dp(idx-1) and/or d(idx)
+class Solution{
+public:
+    int knapSack(int n, int W, int val[], int wt[]){
+        vector<int> prev(W+1, 0), cur(W+1,0);
+        
+        for(int w = 0; w <= W; w++) prev[w] = (w/wt[0])*val[0];
+        
+        for(int idx = 1; idx < n; idx++){
+            for(int w = 0; w <= W; w++){
+                int notTake = prev[w];
+                int take = 0;
+                if(wt[idx] <= w) take = cur[w-wt[idx]] + val[idx];
+                cur[w] = max(take, notTake);
+            }
+            prev = cur;
+        }
+        
+        return prev[W];
+    }
+};
+
+// space optimization to 1D - just update the same cur[w]  - kinda like the prev[w] gets rewritten by the max of prev[w] and prev[w-wt[i]] 
+class Solution{
+public:
+    
+    int knapSack(int n, int W, int val[], int wt[]){
+        vector<int> cur(W+1,0);
+        
+        for(int w = 0; w <= W; w++) cur[w] = (w/wt[0])*val[0];
+        
+        for(int idx = 1; idx < n; idx++){
+            for(int w = 0; w <= W; w++){
+                int notTake = cur[w];
+                int take = 0;
+                if(wt[idx] <= w) take = cur[w-wt[idx]] + val[idx];
+                cur[w] = max(take, notTake);
+            }
+        }
+        
+        return cur[W];
+    }
+};
