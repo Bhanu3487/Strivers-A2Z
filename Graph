@@ -1,0 +1,167 @@
+#include <iostream>
+using namespace std;
+
+// AM - space complexity issues - use AL
+
+// learning
+// Q1 - num of graphs possible with n vertices - ans: pow(2,(n*(n-1))/2) - check using adj matrix
+
+// Q2,3 - convert edges to al edges -> am -> al - tle 
+vector<vector<int>> printGraph(int V, vector<pair<int,int>>edges) {
+    vector<vector<int>> am(V, vector<int>(V,0));
+    vector<vector<int>> al(V);
+    
+    for(auto edge: edges){
+        am[edge.first][edge.second] = 1;
+        am[edge.second][edge.first] = 1;
+    }
+    
+    for(int i = 0; i < V; i++){
+        for(int j = 0; j < V; j++){
+            if(am[i][j]) al[i].push_back(j);
+        }
+    }
+    return al;
+}
+
+// better mothod - edges to al
+vector<vector<int>> printGraph(int V, vector<pair<int,int>>edges) {
+    vector<vector<int>> al(V);
+    
+    for(auto edge: edges){
+        al[edge.first].push_back(edge.second);
+        al[edge.second].push_back(edge.first);
+    }
+
+    return al;
+}
+
+// Q4 - connected components (in a disconnected graphs)
+// to traversal in a disconnected graph - keep trach of visited vertices.
+for(auto v: V){
+    if(!visited(v)) traversal(v)        //visited is and arr and traversal is a func 
+}
+
+// Q5 Function to return Breadth First Traversal of given graph.
+vector<int> bfsOfGraph(int V, vector<int> adj[]) {
+    queue<int> q;
+    vector<bool> visited(V,false);
+    vector<int> bfs;
+    
+    q.push(0);
+    visited[0] = true;
+
+    while(!q.empty()){
+        int v = q.front();
+        q.pop();
+        bfs.push_back(v);
+    
+        for(int i: adj[v]){
+            if(!visited[i]) {
+                q.push(i);
+                visited[i] = true;
+            }
+        }
+    }
+    
+    return bfs;
+}
+
+// Q6 Function to return a list containing the DFS traversal of the graph.
+vector<int> dfsOfGraph(int V, vector<int> adj[]) {
+    vector<int> dfs;
+    vector<int> visited(V, false);
+    stack<int> st;
+    
+    st.push(0);
+    
+    while(!st.empty()){
+        int v = st.top();
+        st.pop();
+        if(!visited[v]) {
+            dfs.push_back(v);
+            visited[v] = true;
+        }
+        
+        for(int i = adj[v].size()-1; i >= 0; i--){
+            if(!visited[adj[v][i]]){
+                st.push(adj[v][i]);
+            }
+        }
+    }
+    return dfs;
+}
+
+// traversal
+// Q1 - num of connected componets
+// time:O(n^2)95%, space:O(n)58%
+class Solution {
+public:
+    int check(vector<bool>& visited){
+        for(int i = 0; i < visited.size(); i++){
+            if(visited[i] == false) return i;
+        }
+        return -1;
+    }
+
+    int findCircleNum(vector<vector<int>>& edges) {
+        int n = edges.size();
+        queue<int> q;
+        vector<bool> visited(n, false);
+        int ans = 0;
+
+        int c = check(visited);
+        while(c != -1){
+            q.push(c);
+            visited[c] = true;
+            ans++;
+            
+            while(!q.empty()){
+                int v = q.front();
+                q.pop();
+                
+                for(int u = 0; u < n; u++){
+                    if(edges[v][u] == 1 && visited[u] == false){
+                        q.push(u);
+                        visited[u] = true;
+                    }
+                }
+            }
+            
+            c = check(visited);
+        }
+        return ans;
+    }
+};
+
+// time:O(n^2)60%, space:O(n)5%
+class Solution {
+public:
+    void bfsOfGraph(int v, vector<vector<int>> adj, vector<bool>& visited) {        
+        queue<int> q;
+        q.push(v);
+        visited[v] = true;
+
+        while(!q.empty()){
+            int v = q.front();
+            q.pop();
+        
+            for(int u = 0; u < adj.size(); u++){
+                if(!visited[u] && adj[v][u] == 1) {
+                    q.push(u);
+                    visited[u] = true;
+                }
+            }
+        }
+        return;
+    }
+
+    int findCircleNum(vector<vector<int>>& edges) {
+        vector<bool> visited(edges.size(),false);
+        int ans = 0;
+        for(int i = 0; i < edges.size(); i++){
+            if(visited[i] == false) {bfsOfGraph(i, edges, visited); ans++;}
+        }
+        return ans;
+    }
+};
