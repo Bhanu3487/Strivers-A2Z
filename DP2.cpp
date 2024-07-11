@@ -523,3 +523,502 @@ public:
 
 // can be optimised to 1D tabulation, if structured properly, i.e n=s.size() and t= m.size() etc
 
+// Q11 - Edit distance - convert word1 to word2 by add, del and rep
+// 2D tabulation time: O(n*m)100%, space: O(m*n)30%
+class Solution {
+public:
+    int minDistance(string word1, string word2) {
+        if(word1 == word2) return 0;
+        int n = word1.size(), m = word2.size();
+
+        vector<vector<int>> dp(n+1, vector<int>(m+1,0));
+
+        for(int i = 1; i <= n; i++) dp[i][0] = i;
+        for(int i = 1; i <= m; i++) dp[0][i] = i;
+
+        for(int i = 1; i <= n; i++){
+            for(int j = 1; j <= m; j++){
+                if(word1[i-1] == word2[j-1]) dp[i][j] = dp[i-1][j-1];
+                else{
+                    dp[i][j] = 1 + min(min(dp[i-1][j], dp[i][j-1]), dp[i-1][j-1]);
+                }
+            }
+        }
+
+        return dp[n][m];
+    }
+};
+
+// 2 !d tabulation
+// time : o(m*n)100 space: O(m) 95%
+class Solution {
+public:
+    int minDistance(string word1, string word2) {
+        if(word1 == word2) return 0;
+        int n = word1.size(), m = word2.size();
+        if(n <= 1 && m <= 1)return 1;
+
+        vector<int> prev(m+1, 0), cur(m+1, 0);
+
+        for(int i = 1; i <= m; i++) prev[i] = i;
+
+        for(int i = 1; i <= n; i++){
+            cur[0] = i;
+            for(int j = 1; j <= m; j++){
+                if(word1[i-1] == word2[j-1]) cur[j] = prev[j-1];
+                else{
+                    cur[j] = 1 + min(min(prev[j], cur[j-1]), prev[j-1]);
+                }
+            }
+            prev = cur;
+        }
+
+        return cur[m];
+    }
+};
+
+// 5, DP on stocks ----------------------------------------------------------
+// Q1. best time to buy and sell stocks
+// 2D tabluation - tle : time:O(n^2) space:O(n^2)
+// 1D tabulation - tle : time:O(n^2) space:O(n)
+
+// np dp sol'n
+// time: O(n), space:O(1)
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+
+        int m = INT_MAX, ans = INT_MIN;
+        for(int i = 1; i < n; i++){
+            m = min(prices[i-1], m);
+            ans = max(prices[i] - m, ans);
+        }
+
+        if(ans < 0)return 0;
+        return ans;
+    }
+};
+
+// Q2. buy and sell stocks but only 1 stock at a time (can buy multiple times)
+
+// recursion - tle - time: O(2^n), space: O(n) ASS
+class Solution {
+public:
+    int helper(int idx, bool buy, vector<int>& prices){
+        if(idx == prices.size())return 0; 
+        int profit = 0;
+        if(buy == 1){
+            // buy & not buy
+            profit = max(helper(idx+1, 0, prices) - prices[idx], helper(idx+1, 1, prices));
+        }
+        else{
+            // sell & not sell
+            profit = max(prices[idx] + helper(idx+1, 1, prices), helper(idx+1, 0, prices));
+        }
+        return profit;
+    }
+
+    int maxProfit(vector<int>& prices) {
+        return helper( 0, 1, prices);
+    }
+};
+
+// memoization: time:O(2n) 35%, space:O(2n)+O(n)ASS 16%
+class Solution {
+public:
+    int helper(int idx, bool buy, vector<int>& prices, vector<vector<int>>& dp){
+        if(idx == prices.size())return 0; 
+        if(dp[idx][buy] != -1)return dp[idx][buy];
+        int profit = 0;
+        if(buy == 1){
+            // buy & not buy
+            profit = max(helper(idx+1, 0, prices, dp) - prices[idx], helper(idx+1, 1, prices, dp));
+        }
+        else{
+            // sell & not sell
+            profit = max(prices[idx] + helper(idx+1, 1, prices, dp), helper(idx+1, 0, prices, dp));
+        }
+        return dp[idx][buy] = profit;
+    }
+
+    int maxProfit(vector<int>& prices) {
+        vector<vector<int>>dp(prices.size(), vector<int>(2,-1));
+        return helper( 0, 1, prices, dp);
+    }
+};
+
+// tabulation, time:O(2n) 90%, space:O(2n) 20%
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        vector<vector<int>>dp(n+1, vector<int>(2,0));
+        dp[n][0] = dp[n][1] = 0;
+
+        for(int idx = n-1; idx >= 0; idx--){
+            for(int buy = 0; buy < 2; buy++){
+                int profit = 0;
+                if(!buy) profit = max(prices[idx] + dp[idx+1][1], dp[idx+1][0]);
+                else profit =  max(dp[idx+1][0] - prices[idx], dp[idx+1][1]);
+                dp[idx][buy] = profit;
+            }
+        }
+        return dp[0][1];
+    }
+};
+
+// space optimization; time: O(2n) 90%, space: O(2*2) 40%
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        vector<int> cur(2,0), prev(2,0);
+        cur[0] = cur[1] = 0;
+
+        for(int idx = n-1; idx >= 0; idx--){
+            for(int buy = 0; buy < 2; buy++){
+                int profit = 0;
+                if(!buy) profit = max(prices[idx] + cur[1], cur[0]);
+                else profit =  max(cur[0] - prices[idx], cur[1]);
+                prev[buy] = profit;
+            }
+            cur = prev;
+        }
+        return prev[1];
+    }
+};
+
+// no dp sol'n, time:O(n) 100%, space:O(1) 50%
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int net_profit = 0;
+        for(int i = 1; i < prices.size(); i++){
+            if(prices[i] > prices[i-1]) net_profit += prices[i] - prices[i-1];
+        }
+        return net_profit;
+    }
+};
+
+// Q3- same as above but can only buy stocks at max 2 times
+// recursion - 1 new param added, num of stockes brought - tle
+class Solution {
+public:
+    int func(int idx, int num, bool buy, vector<int>& prices){
+        if(idx == prices.size())return 0;
+        if(num == 3) return 0;
+
+        int profit = 0;
+        if(buy){
+            // buy or not buy
+            profit = max(func(idx+1, num + 1, 0, prices) - prices[idx], func(idx+1, num, 1, prices));
+        }
+        else{
+            // sell or not sell
+            profit = max(func(idx + 1, num, 1, prices) + prices[idx], func(idx + 1, num, 0, prices));
+        }
+
+        return profit;
+    }
+
+    int maxProfit(vector<int>& prices) {
+        return func(0, 0, 1, prices);
+    }
+}; 
+
+// memoization: time:O(n*2*3), space:O(n*2*3) + O(n)ass
+class Solution {
+public:
+    int func(int idx, int buy, int cap, vector<int>& prices, vector<vector<vector<int>>>& dp){
+        if(idx == prices.size() || cap == 0)return 0;
+
+        if(dp[idx][buy][cap] != -1) return dp[idx][buy][cap]; 
+        if(buy == 1){
+            // buy or not buy
+            return dp[idx][buy][cap] = max( dp[idx+1][0][cap] - prices[idx], dp[idx+1][1][cap]);
+        }
+        
+        return dp[idx][buy][cap] = max(dp[idx+1][1][cap-1] + prices[idx], dp[idx+1][0][cap]);
+    }
+
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        vector<vector<vector<int>>> dp(n, vector<vector<int>>(2,vector<int>(3,-1)));
+
+        return func(0, 1, 2, prices, dp);
+    }
+};
+
+// tabulation time:O(n*2*3) 35%, space:O(N*2*3) 50%
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        vector<vector<vector<int>>> dp(n+1, vector<vector<int>>(2,vector<int>(3,0)));
+        
+        for(int idx = n-1; idx >= 0; idx--){
+            for(int buy = 0; buy <= 1; buy++){
+                for(int cap = 0; cap <= 2; cap++){
+                    if(cap == 0)dp[idx][buy][cap] = 0;
+                    else{
+                        if(buy == 1) dp[idx][buy][cap] = max( dp[idx+1][0][cap] - prices[idx], dp[idx+1][1][cap]);
+                        else dp[idx][buy][cap] = max( dp[idx+1][1][cap-1] + prices[idx], dp[idx+1][0][cap]);
+                    }
+                }
+            }
+        }
+        return dp[0][1][2];
+    }
+};
+
+// space optimisation time:O(n*2*3)80%, space:O(2*3)90%
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        vector<vector<int>> prev (2,vector<int>(3,0)), cur (2,vector<int>(3,0));
+        
+        for(int idx = n-1; idx >= 0; idx--){
+            for(int buy = 0; buy <= 1; buy++){
+                for(int cap = 0; cap <= 2; cap++){
+                    if(cap == 0)prev[buy][cap] = 0;
+                    else{
+                        if(buy == 1) prev[buy][cap] = max( cur[0][cap] - prices[idx], cur[1][cap]);
+                        else prev[buy][cap] = max( cur[1][cap-1] + prices[idx], cur[0][cap]);
+                    }
+                }
+            }
+            cur = prev;
+        }
+        return prev[1][2];
+    }
+};
+
+// transaction method - tle
+class Solution {
+public:
+    int func(int idx, int t, vector<int>& prices, vector<vector<int>>& dp){
+        if(idx == prices.size() || t == 4)return 0;
+
+        if(dp[idx][t] != -1) return dp[idx][t]; 
+        if(t % 2 == 0){
+            // buy or not buy
+            return dp[idx][t] = max( func(idx+1,t+1,prices,dp) - prices[idx], func(idx+1,t,prices,dp));
+        }
+        //sell or not sell
+        return dp[idx][t] = max(func(idx+1,t+1,prices,dp) + prices[idx], func(idx+1,t,prices,dp));
+    }
+
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        vector<vector<int>>dp(n,vector<int>(4,-1));
+
+        return func(0,0,prices,dp);
+    }
+};
+
+// Q4 same as above but atmost k transactions
+// time:O(n*2*k), space:O(n*2*k)+O(n)
+class Solution {
+public:
+int func(int idx, int t, vector<int>& prices, vector<vector<int>>& dp){
+        if(idx == prices.size() || t == dp[0].size())return 0;
+
+        if(dp[idx][t] != -1) return dp[idx][t]; 
+        if(t % 2 == 0){
+            // buy or not buy
+            return dp[idx][t] = max( func(idx+1,t+1,prices,dp) - prices[idx], func(idx+1,t,prices,dp));
+        }
+        //sell or not sell
+        return dp[idx][t] = max(func(idx+1,t+1,prices,dp) + prices[idx], func(idx+1,t,prices,dp));
+    }
+
+    int maxProfit(int k, vector<int>& prices) {
+        int n = prices.size();
+        vector<vector<int>>dp(n,vector<int>(2*k,-1));
+
+        return func(0,0,prices,dp);
+    }
+};
+
+//tabulation, time:O(n*2*k)80% space:O(2*k*n)50%
+class Solution {
+public:
+    int maxProfit(int k, vector<int>& prices) {
+        int n = prices.size();
+        vector<vector<int>>dp(n+1,vector<int>(2*k+1,0));
+
+        for(int idx = n-1; idx >= 0; idx--){
+            for(int t = 2*k - 1; t >= 0; t--){
+                if(t % 2 == 0) dp[idx][t] = max(dp[idx+1][t+1] - prices[idx], dp[idx+1][t]);
+                else dp[idx][t] = max(dp[idx+1][t+1] + prices[idx], dp[idx+1][t]);
+            }
+        }
+        return dp[0][0];
+    }
+};
+
+// space optimization
+
+// Q5 - q2 but after selling u have to wait for a day before buying - cooldown
+// so thee are 3 states, buy,sell and cooldown
+// if buy == 1: it means u can buy or not buy
+// if but == 2: stock just sold so in cooldown, you can not  do anything but your state changes to 1 - i.e can buy next day
+// if buy == 0: has brought a stock either sell or wait
+class Solution {
+public:
+    int helper(int idx, int buy, vector<int>& prices, vector<vector<int>>& dp){
+        if(idx == prices.size())return 0; 
+        if(dp[idx][buy] != -1)return dp[idx][buy];
+        int profit = 0;
+        // 1: buy(1->0) & not buy(1->1)
+        if(buy == 1)return dp[idx][buy] = max(helper(idx+1, 0, prices, dp) - prices[idx], helper(idx+1, 1, prices, dp));
+        // 2: not but/not sell (change to 1)
+        else if(buy == 2) return dp[idx][buy] = helper(idx+1, 1, prices, dp);
+        // 0: sell(0->2) & not sell(0->0)
+        else return dp[idx][buy] = max(prices[idx] + helper(idx+1, 2, prices, dp), helper(idx+1, 0, prices, dp));
+    }
+
+    int maxProfit(vector<int>& prices) {
+        vector<vector<int>>dp(prices.size(), vector<int>(3,-1));
+        return helper( 0, 1, prices, dp);
+    }
+};
+
+// tabulation , time:O(n*3) 100%, space:O(n*3)70%
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        vector<vector<int>>dp(n+1, vector<int>(3,0));
+
+        for(int idx = n-1; idx >= 0; idx--){
+            for(int buy = 0; buy < 3; buy++){
+                if(buy == 1) dp[idx][buy] = max(dp[idx+1][0] - prices[idx], dp[idx+1][1]);
+                else if(buy == 2) dp[idx][buy] = dp[idx+1][1];
+                else dp[idx][buy] = max(prices[idx] + dp[idx+1][2], dp[idx+1][0]);
+            }
+        }
+        return dp[0][1];
+    }
+};
+
+//space optim- time:O(3n)100%. space:O(3*2)95%
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        vector<int> prev(3,0), cur(3,0);
+
+        for(int idx = n-1; idx >= 0; idx--){
+            for(int buy = 0; buy < 3; buy++){
+                if(buy == 1) prev[buy] = max(cur[0] - prices[idx], cur[1]);
+                else if(buy == 2) prev[buy] = cur[1];
+                else prev[buy] = max(prices[idx] + cur[2], cur[0]);
+            }
+            cur = prev;
+        }
+        return prev[1];
+    }
+};
+
+// different method- once we sell- we can only buy from the day after tmr - hence after[1]
+// time:O(2*(n+2))80, space:O(3*3)70
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int n = prices.size();
+        vector<int> prev(2,0), cur(2,0), after(2,0);
+
+        for(int idx = n-1; idx >= 0; idx--){
+            for(int buy = 0; buy < 2; buy++){
+                if(buy == 1) prev[buy] = max(cur[0] - prices[idx], cur[1]);
+                else prev[buy] = max(prices[idx] + after[1], cur[0]);
+            }
+            after = cur;
+            cur = prev;
+        }
+        return prev[1];
+    }
+};
+
+class Solution {
+public:
+    int maxProfit(vector<int>& prices, int fee) {
+        int n = prices.size();
+        vector<int> cur(2,0), prev(2,0);
+        cur[0] = cur[1] = 0;
+
+        for(int idx = n-1; idx >= 0; idx--){
+            for(int buy = 0; buy < 2; buy++){
+                int profit = 0;
+                if(!buy) profit = max(prices[idx] + cur[1], cur[0]);
+                else profit =  max(cur[0] - prices[idx] - fee, cur[1]);
+                prev[buy] = profit;
+            }
+            cur = prev;
+        }
+        return prev[1];
+    }
+};
+
+// Q6 - same q as q2 - but each transaction has fee - just charge the stock when brought 
+class Solution {
+public:
+    int maxProfit(vector<int>& prices, int fee) {
+        int n = prices.size();
+        vector<int> cur(2,0), prev(2,0);
+        cur[0] = cur[1] = 0;
+
+        for(int idx = n-1; idx >= 0; idx--){
+            for(int buy = 0; buy < 2; buy++){
+                int profit = 0;
+                if(!buy) profit = max(prices[idx] + cur[1], cur[0]);
+                else profit =  max(cur[0] - prices[idx] - fee, cur[1]); // only change in this line
+                prev[buy] = profit;
+            }
+            cur = prev;
+        }
+        return prev[1];
+    }
+};
+
+//
+// Q1 
+// recursion - 
+class Solution {
+public:
+    int f(int idx, int num, vector<int>& nums){
+        if(idx == -1) return 0;
+        int take = 0;
+        if(nums[idx] < nums[num]) take = f(idx-1, idx, nums)+1;
+        int not_take = f(idx-1, num, nums);
+        return max(take, not_take);
+    }
+
+    int lengthOfLIS(vector<int>& nums) {
+        nums.push_back(INT_MAX);
+        int n = nums.size();
+        return f(n-2, n-1, nums);
+    }
+};
+
+// tabulation
+class Solution {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        nums.push_back(INT_MAX);
+        int n = nums.size();
+        vector<vector<int>>dp(n, vector<int>(n,0));
+
+        for(int idx = 0; idx < n-1; idx++){
+            for(int num = 0; num < n; num++){
+                int take = 0;
+                if (nums[idx] < nums[num]) take = dp[idx-1][idx]+1;
+                dp[idx][num] = max(dp[idx-1][num], take);
+            }
+        }
+        return dp[n-2][n-1];
+    }
+};
