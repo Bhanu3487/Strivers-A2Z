@@ -165,3 +165,447 @@ public:
         return ans;
     }
 };
+
+// Q3 - rotten oranges - the fresh tomatoes around rotten tomatoes get rotten, in how much time will all tomatoes rot
+// 1.30, time:O(n^2) 100, space:O(n) 9
+class Solution {
+public:
+    void bfs(vector<vector<int>>& grid, vector<bool>& vis, vector<int>& dis, vector<int>& rot){
+        int n = grid.size();
+        int m = grid[0].size();
+        queue<int> q;
+
+        for(int r: rot) {q.push(r); vis[r] = true;}
+
+        while(!q.empty()){
+            int v = q.front(); q.pop();
+            int r = v/m, c = v%m;
+
+            cout<<v << " " <<r<<" "<<c;
+            
+            if(r > 0 && vis[m*(r-1)+c] == false){
+                if(grid[r-1][c] == 0 || grid[r-1][c] == 2) vis[m*(r-1)+c] = true;
+                else{
+                    q.push(m*(r-1)+c);
+                    vis[m*(r-1)+c] = true;
+                    dis[m*(r-1)+c] = 1 + dis[v];
+                }
+            }
+
+            if(r != n-1 && vis[m*(r+1)+c] == false){
+                if(grid[r+1][c] == 0 || grid[r+1][c] == 2) vis[m*(r+1)+c] = true;
+                else{
+                    q.push(m*(r+1)+c);
+                    vis[m*(r+1)+c] = true;
+                    dis[m*(r+1)+c] = 1 + dis[v];
+                }
+            }  
+
+            if(c != m-1 && vis[m*r+(c+1)] == false){
+                if(grid[r][c+1] == 0 || grid[r][c+1] == 2) vis[m*r+(c+1)] = true;
+                else{
+                    q.push(m*r+(c+1));
+                    vis[m*r+(c+1)] = true;
+                    dis[m*r+(c+1)] = 1 + dis[v];
+                }
+            }   
+
+            if(c > 0 && vis[m*r+(c-1)] == false){
+                if(grid[r][c-1] == 0 || grid[r][c-1] == 2) vis[m*r+(c-1)] = true;
+                else{
+                    q.push(m*r+(c-1));
+                    vis[m*r+(c-1)] = true;
+                    dis[m*r+(c-1)] = 1 + dis[v];
+                }
+            }         
+        }
+    }
+
+    int orangesRotting(vector<vector<int>>& grid) {
+        int n = grid.size();
+        int m = grid[0].size();
+        vector<bool> vis(n*m, false);
+        vector<int> dis(n*m, 0);
+
+        int flag = 0;
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < m; j++){
+                if(grid[i][j] == 1) {flag = 1; break;}
+            }
+        }
+        if(flag == 0)return 0;
+
+        vector<int> rot;
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < m; j++){
+                if(grid[i][j] == 2) rot.push_back(m*i+j);
+            }
+        }
+        if(rot.size() == 0)return -1;
+        bfs(grid, vis, dis, rot);
+
+        int d = INT_MIN;
+        for(int i = 0; i < n*m; i++){
+            if(d < dis[i]) d = dis[i];
+            if(vis[i] == false && grid[i/m][i%m] == 1)return -1;
+        }
+
+        return d;
+    }
+};
+
+// 85, 15
+class Solution {
+public:
+    int orangesRotting(vector<vector<int>>& grid) {
+        int n = grid.size();
+        int m = grid[0].size();
+        vector<vector<int>> dis(n, vector<int>(m,0));
+        queue<pair<int,int>> q;
+
+        int fresh = 0;
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < m; j++){
+                if(grid[i][j] == 2) q.push(make_pair(i,j)); 
+                if(grid[i][j] == 1) fresh = 1;
+            }
+        }
+        if(fresh == 0)return 0;
+        if(q.empty())return -1;
+
+        vector<int> dr = {-1,0,1,0};
+        vector<int> dc = {0,-1,0,1};
+
+        while(!q.empty()){
+            int r = q.front().first;
+            int c = q.front().second;
+            q.pop();
+
+            for (int i = 0; i < 4; i++) {
+                int nr = r + dr[i];
+                int nc = c + dc[i];
+                if (nr >= 0 && nr < n && nc >= 0 && nc < m && grid[nr][nc] == 1) {
+                    q.push(make_pair(nr, nc));
+                    grid[nr][nc] = 2;  
+                    dis[nr][nc] = dis[r][c] + 1;
+                }
+            }
+        }
+        
+        int d = 0;
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < m; j++){
+                if(grid[i][j] == 1) return -1;
+                d = max(d, dis[i][j]);
+            }
+        }
+
+        return d;
+    }
+};
+
+// Q4 flood fill, hiven source and req clr and start clr - from source any pixel with start clr gets converted to req clr and ro return the final clrs
+class Solution {
+private:
+    void dfs(int row, int col, vector<vector<int>>& ans,vector<vector<int>>& image,int iniColor, int newColor, int delRow[], int delCol[]){
+        ans[row][col] = newColor;
+        for(int i = 0; i < 4; i++){
+            int nrow = row + delRow[i];
+            int ncol = col + delCol[i];
+            if(nrow >= 0 && nrow < image.size() && ncol >= 0 && ncol < image[0].size() && image[nrow][ncol] == iniColor && ans[nrow][ncol] != newColor){
+                dfs(nrow, ncol, ans, image, iniColor, newColor, delRow, delCol);
+            }
+        }
+    }
+
+public:
+    vector<vector<int>> floodFill(vector<vector<int>>& image, int sr, int sc, int color) {
+        int iniColor = image[sr][sc];
+        vector<vector<int>> ans = image;
+        int delRow[] = {-1, 0 ,1, 0};
+        int delCol[] = {0, 1, 0, -1};
+        dfs(sr, sc, ans, image, iniColor, color, delRow, delCol);
+        return ans;
+    }
+};
+
+// Q5 cycle detection - dfs
+class Solution{
+  public:
+    int dfs(int V, vector<int> adj[], vector<bool>& vis, int r){
+        stack<int> st;
+        st.push(r);
+        vector<bool> vis2(V, false);
+        vector<int> par(V, -1);
+        vis[r] = true; vis2[r] = true;par[r] = r;
+        
+        while(!st.empty()){
+            int v = st.top(); st.pop();
+            
+            for(int u: adj[v]){
+                if(vis2[u] && u!=v && u != par[v]) return 1;
+                if(!vis[u]){
+                    st.push(u);
+                    vis[u] = true; vis2[u] = true;
+                    par[u] = v;
+                }
+            }
+        }
+        return 0;
+    }
+    
+    bool isCycle(int V, vector<int> adj[]) {
+        vector<bool> vis(V, false);
+        
+        for(int i = 0; i < V; i++){
+            if(!vis[i]) if(dfs(V, adj, vis, i))return 1;
+        }
+        return 0;
+    }
+};
+
+class Solution{
+ private:
+    bool dfs(int v, int par, vector<bool>&vis, vector<int> adj[]){
+        vis[v] = true;
+        for(auto u: adj[v]){
+            if(!vis[u]) {if(dfs(u, v, vis, adj)) return true;}
+            else if(u != par) return true;
+        }
+        return false;
+    }
+    
+  public:
+    bool isCycle(int V, vector<int> adj[]) {
+        vector<bool> vis(V, false);
+        
+        for(int i = 0; i < V; i++){
+            if(!vis[i]) if(dfs(i, -1, vis, adj))return true;
+        }
+        return false;
+    }
+};
+
+// Cycle detection - bfs - rep stack with queue in dfs
+// time: O(V + 2E) (2E = sum(degree) = sum(adj edges) in undir graph)
+// queue :O(V) - queue and vis and par
+class Solution{
+public:
+    int dfs(int V, vector<int> adj[], vector<bool>& vis, int r){
+        queue<int> q;
+        q.push(r);
+        vector<bool> vis2(V, false);
+        vector<int> par(V, -1);
+        vis[r] = true; vis2[r] = true;par[r] = r;
+        
+        while(!q.empty()){
+            int v = q.front(); q.pop();
+            
+            for(int u: adj[v]){
+                if(vis2[u] && u!=v && u != par[v]) return 1;
+                if(!vis[u]){
+                    q.push(u);
+                    vis[u] = true; vis2[u] = true;
+                    par[u] = v;
+                }
+            }
+        }
+        return 0;
+    }
+    
+    bool isCycle(int V, vector<int> adj[]) {
+        vector<bool> vis(V, false);
+        
+        for(int i = 0; i < V; i++){
+            if(!vis[i]) if(dfs(V, adj, vis, i))return 1;
+        }
+        return 0;
+    }
+};
+
+
+// Q8 - surrounding region, find all the connected regions in contect with the edges, keep these unaffected, and convert the remaining regions
+// time :O(V+2E => (n*m) + 2*n*m) dfs + O(n*m) - 33, space:O()ASS - 7
+class Solution {
+public:
+    void dfs(vector<vector<char>>& board, int r, int c){
+        if(board[r][c] == 'x' || board[r][c] == 'X')return;
+        int n = board.size();
+        int m = board[0].size();
+        
+        board[r][c] = 'x';
+        vector<int> dr = {-1,0,1,0};
+        vector<int> dc = {0,-1,0,1};
+
+        for(int i = 0; i < 4; i++){
+            int nr = r+dr[i], nc = c+dc[i];
+            if(nr < n && nc < m && nr >= 0 && nc >= 0) {
+                dfs(board, nr, nc);
+            }
+        }
+        return;
+    }
+
+    void solve(vector<vector<char>>& board) {
+        int n = board.size();
+        int m = board[0].size();
+        
+        for(int i = 0; i < n; i++){
+            if(board[i][0] == 'O') dfs(board, i, 0);
+            if(board[i][m-1] == 'O') dfs(board, i, m-1);
+        }
+
+        for(int i = 1; i < m-1; i++){
+            if(board[0][i] == 'O') dfs(board, 0, i);
+            if(board[n-1][i] == 'O') dfs(board, n-1, i);
+        }
+
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < m; j++){
+                if(board[i][j] == 'O')board[i][j] = 'X';
+                if(board[i][j] == 'x')board[i][j] = 'O';
+            }
+        }
+
+        return;
+    }
+};
+
+// Q9 - flood fill - same as above q
+// time:5, space:5
+class Solution {
+public:
+    void dfs(vector<vector<int>>& board, int r, int c){
+        if(board[r][c] == 0)return;
+        int n = board.size();
+        int m = board[0].size();
+        
+        board[r][c] = 0;
+        vector<int> dr = {-1,0,1,0};
+        vector<int> dc = {0,-1,0,1};
+
+        for(int i = 0; i < 4; i++){
+            int nr = r+dr[i], nc = c+dc[i];
+            if(nr < n && nc < m && nr >= 0 && nc >= 0) {
+                dfs(board, nr, nc);
+            }
+        }
+        return;
+    }
+
+    int numEnclaves(vector<vector<int>>& board) {
+        int n = board.size();
+        int m = board[0].size();
+        
+        for(int i = 0; i < n; i++){
+            if(board[i][0] == 1) dfs(board, i, 0);
+            if(board[i][m-1] == 1) dfs(board, i, m-1);
+        }
+
+        for(int i = 1; i < m-1; i++){
+            if(board[0][i] == 1) dfs(board, 0, i);
+            if(board[n-1][i] == 1) dfs(board, n-1, i);
+        }
+
+        int ans = 0;
+        for(int i = 1; i < n-1; i++){
+            for(int j = 1; j < m-1; j++){
+                if(board[i][j] == 1) ans++;
+            }
+        }
+
+        return ans;
+    }
+};
+
+// same code as above but 40, 60
+class Solution {
+public:
+    void dfs(vector<vector<int>>& grid,int i,int j,int m,int n){
+        if(i<0 || i >=m || j<0 || j>=n || grid[i][j] == 0 || grid[i][j] == 2) return;
+        grid[i][j] = 2;
+        int ai[] = {0,1,0,-1};
+        int aj[] = {1,0,-1,0};
+
+        for(int k=0;k<4;k++){
+            dfs(grid,i+ai[k],j+aj[k],m,n);
+        }
+    }
+    int numEnclaves(vector<vector<int>>& grid) {
+        int m = grid.size();
+        int n = grid[0].size();
+
+        for(int i=0;i<m;i++){
+            dfs(grid,i,0,m,n);
+            dfs(grid,i,n-1,m,n);
+        }
+        for(int i=0;i<n;i++){
+            dfs(grid,0,i,m,n);
+            dfs(grid,m-1,i,m,n);
+        }
+
+        int count = 0;
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(grid[i][j]==1) count++;
+            }
+        }
+
+        return count;
+    }
+};
+
+// Q13
+// time:O(V+2E) 85, space:O(V) 20
+class Solution {
+public:
+    bool isBipartite(vector<vector<int>>& graph) {
+        int n = graph.size();
+        vector<int> cls(n,-1);
+
+        for(int i = 0; i < n; i++){
+            if(cls[i] == -1){
+                queue<int> q;
+                cls[i] = i;
+                q.push(i);
+
+                while(!q.empty()){
+                    int v = q.front(); q.pop();
+
+                    for(int u: graph[v]){
+                        if(cls[u] == cls[v]) return false;
+                        else if(cls[u] == -1) {cls[u] = cls[v]^1; q.push(u);}
+                    }
+                }
+            }
+        }
+        
+        return true;
+    }
+};
+
+// Q14- cycle detection in directed graph
+class Solution {
+public:
+    bool dfsCheck(int v, vector<int> vis, vector<int>pathVis, vector<int>adj[]){
+        vis[v] = 1; pathVis[v] = 1;
+
+        for(auto u:adj[v]){
+            if(!vis[u]) if(dfs(u, vis, pathVis, adj) == true) return true;
+            else if(pathVis[u]) return true;
+        }
+
+        pathVis[v] = 0;
+        return false;
+    }
+    
+    bool isCyclic(int V, vector<int>adj[]){
+        int vis[V] = {0};
+        int pathVis[V] = {0};
+
+        for(int i = 0; i < V; i++){
+            if(!vis[i]) if(dfsCheck(i, vis, pathVis, adj)) return true;
+        }
+        return false;
+    }
+};
