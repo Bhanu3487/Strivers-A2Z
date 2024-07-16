@@ -609,3 +609,73 @@ public:
         return false;
     }
 };
+
+// actual Q14 - topological sort
+// time: O(E+V) - dfs and create adj 25, space:O(V+E) - stack vis, adj, 35
+class Solution {
+public:
+    bool dfs(int v, vector<int>& vis, vector<int>& pathVis, stack<int>& s, vector<vector<int>>& adj){
+        vis[v] = 1;
+        pathVis[v] = 1;
+        for(auto u:adj[v]){
+            if(pathVis[u]) return false;
+            if(!vis[u]) if(!dfs(u, vis, pathVis, s, adj)) return false;
+        }
+        
+        s.push(v);
+        pathVis[v] = 0;
+        return true;
+    }
+
+    vector<int> findOrder(int V, vector<vector<int>>& edges) {
+        vector<vector<int>>adj(V);
+        for(int i = 0; i < edges.size(); i++){
+            adj[edges[i][1]].push_back(edges[i][0]);
+        }
+
+        vector<int> vis(V,0);
+        vector<int> pathVis(V,0);
+        stack<int> s;
+
+        for(int i = 0; i < V; i++){
+            if(!vis[i]) if(!dfs(i, vis, pathVis, s, adj)) return vector<int>{};
+        }
+
+        vector<int> ans;
+        while(!s.empty()){
+            ans.push_back(s.top());
+            s.pop();
+        }
+        
+        return ans;
+    }
+};
+
+// using bfs and checking prereq - same idea
+// --------replacing queue with stack in the below code - time:30
+// time: O(V+E)-bfs,adj 90%, space:O(V+E) 60% indeg, queue
+class Solution {
+public:
+    vector<int> findOrder(int N, vector<vector<int>>& edges) {
+        vector<vector<int>> adj(N);                   // {prerequisite-course : [list of next courses]}
+        vector<int> ans, indegree(N);               // indegree[i] denotes number of prerequisite courses for ith course
+        for(auto& edge : edges) 
+            adj[edge[1]].push_back(edge[0]),            // forming adjacency list graph
+            indegree[edge[0]]++;                     
+        
+        queue<int> q;
+        for(int i = 0; i < N; i++)
+            if(indegree[i] == 0) q.push(i);         // we can start with courses having no prequisites
+        
+        while(!q.empty()) {
+            auto v = q.front(); q.pop();
+            ans.push_back(v);                     // cur has no remaining pre courses, so we can take it now
+            for(auto u : adj[v]) 
+                if(--indegree[u] == 0)     // if there's a next course having 0 prequisite remaining,
+                    q.push(u);             // then we can take it
+        }
+
+        if(size(ans) == N) return ans;              // ordering exists where all courses can be finished
+        return {};                                      
+    }
+};
