@@ -2,6 +2,7 @@
 using namespace std;
 
 // AM - space complexity issues - use AL
+// stack - using stack data structure(same as bfs) and using resursion (can also do backtracing)
 
 // learning
 // Q1 - num of graphs possible with n vertices - ans: pow(2,(n*(n-1))/2) - check using adj matrix
@@ -584,32 +585,34 @@ public:
     }
 };
 
-// Q14- cycle detection in directed graph
+// Q14- cycle detection in directed graph - using dfs (using bfs in toposort)
 class Solution {
 public:
-    bool dfsCheck(int v, vector<int> vis, vector<int>pathVis, vector<int>adj[]){
-        vis[v] = 1; pathVis[v] = 1;
-
-        for(auto u:adj[v]){
-            if(!vis[u]) if(dfs(u, vis, pathVis, adj) == true) return true;
-            else if(pathVis[u]) return true;
+    bool dfs(int v, vector<bool>& vis, vector<bool>& pathVis, vector<int> adj[]){
+        vis[v] = true;
+        pathVis[v] = true;
+        for(int u: adj[v]){
+            if(!vis[u]) {
+                if(dfs(u, vis, pathVis, adj)) return true;
+            } else if(pathVis[u]) return true;
         }
-
-        pathVis[v] = 0;
+        pathVis[v] = false;
         return false;
     }
-    
-    bool isCyclic(int V, vector<int>adj[]){
-        int vis[V] = {0};
-        int pathVis[V] = {0};
 
+    bool isCyclic(int V, vector<int> adj[]) {
+        vector<bool> vis(V,false);
+        vector<bool> pathVis(V,false);
+        
+        //traverse all components(connected and disconnnected)
         for(int i = 0; i < V; i++){
-            if(!vis[i]) if(dfsCheck(i, vis, pathVis, adj)) return true;
+            if(!vis[i]) if(dfs(i, vis, pathVis, adj)) return true;
         }
         return false;
     }
 };
 
+// 3. TOPOSORT and Problems---------------------------------------
 // actual Q14 - topological sort
 // time: O(E+V) - dfs and create adj 25, space:O(V+E) - stack vis, adj, 35
 class Solution {
@@ -651,8 +654,10 @@ public:
     }
 };
 
+// Q2 kahn's algorithm
 // using bfs and checking prereq - same idea
 // --------replacing queue with stack in the below code - time:30
+// because bfs all the prereq courses are done first and so on, but in dfs do traverse te paths - not ideal
 // time: O(V+E)-bfs,adj 90%, space:O(V+E) 60% indeg, queue
 class Solution {
 public:
@@ -679,3 +684,72 @@ public:
         return {};                                      
     }
 };
+
+// Q3. cyle detection - directed graph
+class Solution{
+  public:
+    bool isCyclic(int V, vector<int> adj[]) {
+        vector<int> ans, indegree(V);               // indegree[i] denotes number of prerequisite courses for ith course
+        for(int v = 0; v < V; v++){
+            for(int u : adj[v]) indegree[u]++;
+        }
+        
+        queue<int> q;
+        for(int i = 0; i < V; i++)
+            if(indegree[i] == 0) q.push(i);         // we can start with courses having no prequisites
+        
+        while(!q.empty()) {
+            auto v = q.front(); q.pop();
+            ans.push_back(v);                     // cur has no remaining pre courses, so we can take it now
+            for(auto u : adj[v]) 
+                if(--indegree[u] == 0)     // if there's a next course having 0 prequisite remaining,
+                    q.push(u);             // then we can take it
+        }
+
+        if(ans.size() == V) return 0;              // ordering exists where all courses can be finished
+        return 1;      
+    }
+};
+
+// Q4, Q5 - course shecule same as Q2 ; 50, 70
+
+// Q6 - find safe vertices - a vertex is safe if all paths starting from it end at a terminal (a vertex with no outgoing edges)
+// have a safe arr which tracks safe nodes (1=safe, 0=not vis or not safe) so in dfs check for
+// 1. (vis and !safe) => not safe => return false and 2. (!safe) => not known => if(!dfs(u)) => not safe and 3. if not above - it is safe => only after checking all neighbours and paths, we can decide if it is safe or not
+// time: O(V+E) 85, space: O(V+E) 80 - bc dfs
+class Solution {
+public:
+    bool dfs(int v, vector<bool>& safe, vector<bool>& vis, vector<bool>& pathVis, vector<vector<int>>& graph){
+        vis[v] = true; pathVis[v] = true;
+        for(int u : graph[v]){
+            if(safe[u] == 0 && vis[u]) return false;
+            else if(safe[u] == 0){
+                if(pathVis[u]) return false;
+                if(!dfs(u, safe, vis, pathVis, graph)) {safe[u] = 0; return false;} 
+            }
+        }
+        safe[v] = 1;
+        pathVis[v] = false;
+        return true;
+    }
+
+    vector<int> eventualSafeNodes(vector<vector<int>>& graph) {
+        int V = graph.size();
+        vector<bool> vis(V,false);
+        vector<bool> pathVis(V,false);
+        vector<bool> safe(V,0);
+        vector<int> ans;
+
+        for(int i = 0; i < V; i++){
+            if(graph[i].size() == 0) {safe[i] = true;}
+        }
+
+        for(int i = 0; i < V; i++){
+            if(!vis[i]) dfs(i, safe, vis, pathVis, graph);
+            if(safe[i])ans.push_back(i);
+        }
+        
+        return ans;
+    }
+};
+
