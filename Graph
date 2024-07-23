@@ -2,7 +2,13 @@
 using namespace std;
 
 // AM - space complexity issues - use AL
-// stack - using stack data structure(same as bfs) and using resursion (can also do backtracing)
+// dfs - using stack data structure(same as bfs) and using resursion (can also do backtracing)
+// dfs - the traversal order is seen when poping, in bfs the traversal order is seen when pushing q5 and q6 in learning
+// dfs is slower than bfs (bfs gets into the queue in that order and gets excecuted neatly) - don't write a separate bfs function (auxilary stack space) whearas for dfs its better?
+
+// 4. shortest path from a node to all points
+// undirected unit weight - sime bfs
+// undirected weighted - dijkstras          // directed weighted acylcic - simple bfs/ toposort with bfs
 
 // learning
 // Q1 - num of graphs possible with n vertices - ans: pow(2,(n*(n-1))/2) - check using adj matrix
@@ -25,7 +31,7 @@ vector<vector<int>> printGraph(int V, vector<pair<int,int>>edges) {
     return al;
 }
 
-// better mothod - edges to al
+// better method - edges to al
 vector<vector<int>> printGraph(int V, vector<pair<int,int>>edges) {
     vector<vector<int>> al(V);
     
@@ -38,9 +44,9 @@ vector<vector<int>> printGraph(int V, vector<pair<int,int>>edges) {
 }
 
 // Q4 - connected components (in a disconnected graphs)
-// to traversal in a disconnected graph - keep trach of visited vertices.
+// to traversal in a disconnected graph - keep track of visited vertices.
 for(auto v: V){
-    if(!visited(v)) traversal(v)        //visited is and arr and traversal is a func 
+    if(!visited[v]) traversal(v)        //visited is and arr and traversal is a func 
 }
 
 // Q5 Function to return Breadth First Traversal of given graph.
@@ -84,6 +90,7 @@ vector<int> dfsOfGraph(int V, vector<int> adj[]) {
             visited[v] = true;
         }
         
+        // bcz we need to traverse the paths in a order from left to right
         for(int i = adj[v].size()-1; i >= 0; i--){
             if(!visited[adj[v][i]]){
                 st.push(adj[v][i]);
@@ -93,8 +100,41 @@ vector<int> dfsOfGraph(int V, vector<int> adj[]) {
     return dfs;
 }
 
-// traversal
+// 2. traversal---------------------------------------------
 // Q1 - num of connected componets
+
+// dfs time: O(V+2E)22, space:O() 60
+class Solution {
+public:
+    int findCircleNum(vector<vector<int>>& edges) {
+        int n = edges.size();
+        stack<int> s;
+        vector<bool> visited(n, false);
+        int ans = 0;
+
+        for(int i = 0; i < n; i++){
+            if(!visited[i]){
+                s.push(i);
+                visited[i] = true;
+                ans++;
+            }
+
+            while(!s.empty()){
+                int v = s.top();s.pop();
+                
+                for(int u = 0; u < n; u++){
+                    if(edges[v][u] == 1 && visited[u] == false){
+                        s.push(u);
+                        visited[u] = true;
+                    }
+                }
+            }
+        }
+
+        return ans;
+    }
+};
+
 // time:O(n^2)95%, space:O(n)58%
 class Solution {
 public:
@@ -168,7 +208,7 @@ public:
 };
 
 // Q3 - rotten oranges - the fresh tomatoes around rotten tomatoes get rotten, in how much time will all tomatoes rot
-// 1.30, time:O(n^2) 100, space:O(n) 9
+// 1.30, time:O(n*m) 100, space:O(n*m) 9
 class Solution {
 public:
     void bfs(vector<vector<int>>& grid, vector<bool>& vis, vector<int>& dis, vector<int>& rot){
@@ -306,15 +346,18 @@ public:
 };
 
 // Q4 flood fill, hiven source and req clr and start clr - from source any pixel with start clr gets converted to req clr and ro return the final clrs
+// 45,60
 class Solution {
 private:
     void dfs(int row, int col, vector<vector<int>>& ans,vector<vector<int>>& image,int iniColor, int newColor, int delRow[], int delCol[]){
-        ans[row][col] = newColor;
-        for(int i = 0; i < 4; i++){
-            int nrow = row + delRow[i];
-            int ncol = col + delCol[i];
-            if(nrow >= 0 && nrow < image.size() && ncol >= 0 && ncol < image[0].size() && image[nrow][ncol] == iniColor && ans[nrow][ncol] != newColor){
-                dfs(nrow, ncol, ans, image, iniColor, newColor, delRow, delCol);
+        if(ans[row][col] != newColor){      // mem % inc by 15 when added this line
+            ans[row][col] = newColor;
+            for(int i = 0; i < 4; i++){
+                int nrow = row + delRow[i];
+                int ncol = col + delCol[i];
+                if(nrow >= 0 && nrow < image.size() && ncol >= 0 && ncol < image[0].size() && image[nrow][ncol] == iniColor && ans[nrow][ncol] != newColor){
+                    dfs(nrow, ncol, ans, image, iniColor, newColor, delRow, delCol);
+                }
             }
         }
     }
@@ -330,7 +373,7 @@ public:
     }
 };
 
-// Q5 cycle detection - dfs
+// Q5 cycle detection - dfs - can also use bfs - queue
 class Solution{
   public:
     int dfs(int V, vector<int> adj[], vector<bool>& vis, int r){
@@ -365,6 +408,7 @@ class Solution{
     }
 };
 
+// can be done with pathVis - i think this is better with just 1 var par
 class Solution{
  private:
     bool dfs(int v, int par, vector<bool>&vis, vector<int> adj[]){
@@ -613,7 +657,7 @@ public:
 };
 
 // 3. TOPOSORT and Problems---------------------------------------
-// actual Q14 - topological sort
+// actual Q14 - topological sort, directed graph
 // time: O(E+V) - dfs and create adj 25, space:O(V+E) - stack vis, adj, 35
 class Solution {
 public:
@@ -655,9 +699,9 @@ public:
 };
 
 // Q2 kahn's algorithm
-// using bfs and checking prereq - same idea
+// using bfs and checking prereq - same idea I had
 // --------replacing queue with stack in the below code - time:30
-// because bfs all the prereq courses are done first and so on, but in dfs do traverse te paths - not ideal
+// because bfs all the prereq courses are done first and so on, but in dfs do all traverse the paths - not ideal
 // time: O(V+E)-bfs,adj 90%, space:O(V+E) 60% indeg, queue
 class Solution {
 public:
@@ -753,3 +797,278 @@ public:
     }
 };
 
+// 4.Shortest path problems --------------------------------------------
+// Q1. shortest prom from a ver to all other vertices- using bfs
+class Solution{
+  public:
+    vector<int> shortestPath(vector<vector<int>>& edges, int n,int m, int src){
+        vector<vector<int>>adj(n);
+        for(int i = 0; i < m; i++){
+            adj[edges[i][0]].push_back(edges[i][1]);
+            adj[edges[i][1]].push_back(edges[i][0]);
+        }
+        
+        vector<int>dis(n,-1);
+        queue<int> q;
+        
+        q.push(src);
+        dis[src]= 0;
+        
+        while(!q.empty()){
+            int v=q.front(); q.pop();
+            
+            for(int u: adj[v]){
+                if(dis[u] == -1){
+                    q.push(u);
+                    dis[u] = dis[v]+1;
+                }
+            }
+        }
+        return dis;
+    }
+};
+
+// shortest path for a DAG with weights ------> acyclic
+class Solution{
+     vector<int> shortestPath(int n,int m, vector<vector<int>>& edges){
+        vector<vector<pair<int,int>>>adj(n);
+        for(int i = 0; i < m; i++){
+            adj[edges[i][0]].push_back(make_pair(edges[i][1],edges[i][2]));
+        }
+        
+        vector<int>dis(n,-1);
+        queue<int> q;
+        
+        q.push(0);
+        dis[0]= 0;
+        
+        while(!q.empty()){
+            int v=q.front(); q.pop();
+            
+            for(auto u: adj[v]){
+                int d = dis[v]+ u.second;
+                if(dis[u.first] == -1 || dis[u.first] > d){
+                    q.push(u.first);        // it should not be if(dis[u]==-1)p.push(u.first), bcz when u is having another shorter path then its childen night have a shorter path as well
+                    dis[u.first] = d;       // in the prev q, the 1st path encountered is the shortest bcz all wts are 1 , duh its bfs
+                }
+            }
+        }
+        return dis;
+    }
+};
+
+// another method using toposort
+// why toposort- it ensures that all the u coming befind v in the are closed to src than v in graph - maintains a precedence order
+// time:O(N+E) - like dfs - faster than other algos
+
+class Solution{
+          private:
+  void toposort(int v, vector<vector<pair<int,int>>> &adj, 
+  vector<int>& vis, stack<int>& st){
+      vis[v] = 1;
+      for(u : adj[v]){
+          if(!vis[u.first]) toposort(u.first, adj, vis, st);
+      }
+      
+      st.push(v);
+  }
+  
+  public:
+     vector<int> shortestPath(int n,int m, vector<vector<int>>& edges){
+        vector<vector<pair<int,int>>>adj(n);
+        for(int i = 0; i < m; i++){
+            adj[edges[i][0]].push_back(make_pair(edges[i][1],edges[i][2]));
+        }
+        
+        vector<int>vis(n,0);
+        stack<int> st;
+        for(int i = 0; i < n; i++){
+            if(!vis[i])toposort(i, adj, vis, st);
+        }
+        
+        vector<int>dis(n,1e9);
+        dis[0] = 0;
+        while(!st.empty()){
+            int v = st.top(); st.pop();
+            
+            for(auto u: adj[v]){
+                int d = u.second + dis[v];
+                if(d < dis[u.first]) dis[u.first] = d; 
+            }
+        }
+        for(int i = 0; i < n; i++){
+            if(dis[i] == 1e9)dis[i] = -1;
+        }
+        return dis;
+    }
+};
+
+// shortest path from a node to all vertices, undirected, weighted graph
+// worked with the above bfs code - time:0.11s
+class Solution{
+	public:
+	//Function to find the shortest distance of all the vertices
+    //from the source vertex S.
+    vector <int> dijkstra(int V, vector<vector<int>> adj[], int S){     //vector of vector of list (like 3d arr instead of 2d arr of pair)
+        vector<int>dis(V,-1);
+        queue<int> q;
+        
+        q.push(S);
+        dis[S]= 0;
+        
+        while(!q.empty()){
+            int v=q.front(); q.pop();
+            
+            for(auto u: adj[v]){
+                int d = dis[v]+ u[1];
+                if(dis[u[0]] == -1 || dis[u[0]] > d){
+                    q.push(u[0]);        // it should not be if(dis[u]==-1)p.push(u.first), bcz when u is having another shorter path then its childen night have a shorter path as well
+                    dis[u[0]] = d;       // in the prev q, the 1st path encountered is the shortest bcz all wts are 1 , duh its bfs
+                }
+            }
+        }
+        return dis;
+    }
+};
+
+// Dijkstra's Algorith
+// can not use if graph has -ve weights : infinite loop, bcz path wt gets smaller and smaller in that path (undirected graph loops)
+// using priority queue - O(ElogV) time-0.09s faster than above bfs O(V+E)
+// bfs explores all paths, because priority queue stored by priority, it deals with closer vertices first and can catch closer paths quickly, whearase set can replace even if a longer than is present in the data structure and pq would still have the longer path but bcz the vertex is already explored from shorted path, we need not explore it twice with the longer path in pq
+class Solution{
+    public:
+	//Function to find the shortest distance of all the vertices
+    //from the source vertex S.
+    vector <int> dijkstra(int V, vector<vector<int>> adj[], int S){
+        vector<int>dis(V,1e9);
+        priority_queue< pair<int,int>, vector<pair<int,int>>, greater<pair<int,int>> >pq;           // min heap - priority 1st for dist then node num
+        
+        dis[S]= 0;
+        pq.push({dis[S],S});
+        
+        while(!pq.empty()){
+            int d = pq.top().first;
+            int v = pq.top().second;
+            pq.pop();
+            
+            for(auto it: adj[v]){
+                int wt = it[1];
+                int u = it[0];
+                
+                if(wt+d < dis[u]){
+                    dis[u] = wt+d;
+                    pq.push({dis[u], u});
+                }
+            }
+        }
+        return dis;
+    }
+};
+
+// Dijkstra algorithm - using Set - has an erase option O(logn), without it, there might be iterations in future
+// time : faster than pq , 0.08s
+class Solution{
+    	public:
+	//Function to find the shortest distance of all the vertices
+    //from the source vertex S.
+    vector <int> dijkstra(int V, vector<vector<int>> adj[], int S){
+        vector<int>dis(V,1e9);
+        set<pair<int,int>>st;
+
+        dis[S]= 0;
+        st.insert({dis[S],S});
+        
+        while(!st.empty()){
+            auto it = *(st.begin());
+            int d = it.first;
+            int v = it.second;
+            st.erase(it);
+            
+            for(auto it: adj[v]){
+                int u = it[0];
+                int wt = it[1];
+                
+                if(wt+d < dis[u]){
+                    // erase if there is another path (longer) existing
+                    if(dis[u] != 1e9) st.erase({dis[u],u});
+                
+                    dis[u] = wt+d;
+                    st.insert({dis[u], u});
+                }
+            }
+        }
+        return dis;
+    }
+};
+
+// Q4. Shortest path in binary matrix
+// src - (0,0), dest - (n-1,m-1) and can only travel through the cells with 0 and not with 1.
+// simple bfs - time:O(V+E)=>O(n*m) 20, space:O(v)=>O(n*m) queue 10%
+class Solution {
+public:
+    int shortestPathBinaryMatrix(vector<vector<int>>& grid) {
+        queue<pair<int,int>>q;
+        int n = grid.size(), m = grid[0].size();
+        if(grid[0][0] != 0 || grid[n-1][m-1] != 0)return -1;
+        q.push({0,0});
+        grid[0][0] = 1;
+
+        while(!q.empty()){
+            auto v = q.front();
+            q.pop();
+            int r = v.first, c = v.second;
+            vector<int>dr = {-1,-1,-1, 0, 0, 1, 1, 1};
+            vector<int>dc = {-1, 0, 1,-1, 1,-1, 0, 1};
+
+            for(int i = 0; i < 8; i++){
+                int nr = r+dr[i], nc = c+dc[i];
+                if(nr >= 0 && nr < n && nc >= 0 && nc < m && grid[nr][nc] == 0){
+                    q.push({nr,nc});
+                    grid[nr][nc] = grid[r][c] + 1;
+                }
+            }
+        }
+
+        if(grid[n-1][m-1] == 0 && (n-1 != 0 && m != 0))return -1;
+        return grid[n-1][m-1];
+    }
+};
+
+// using Dijkstra's Algo
+// time:O(ElogV) 16%, space:O(n*m) 8%
+class Solution {
+public:
+    int shortestPathBinaryMatrix(vector<vector<int>>& grid) {
+        int n = grid.size(), m = grid[0].size();
+        if(n == 1 && m == 1 && grid[0][0] == 0)return 1;
+        queue<pair<int,pair<int,int>>>q;
+        vector<vector<int>> dis(n, vector<int>(m,1e9));
+
+        if(grid[0][0] != 0 || grid[n-1][m-1] != 0)return -1;
+        dis[0][0] = 1;
+        q.push({dis[0][0],{0,0}});
+
+        while(!q.empty()){
+            auto v = q.front();
+            q.pop();
+            auto d = v.first;
+            int r = v.second.first, c = v.second.second;
+            vector<int>dr = {-1,-1,-1, 0, 0, 1, 1, 1};
+            vector<int>dc = {-1, 0, 1,-1, 1,-1, 0, 1};
+
+            for(int i = 0; i < 8; i++){
+                int nr = r+dr[i], nc = c+dc[i];
+                if(nr >= 0 && nr < n && nc >= 0 && nc < m && 
+                grid[nr][nc] == 0 && dis[nr][nc] > d+1){
+                    dis[nr][nc] = dis[r][c] + 1;
+                    q.push({dis[nr][nc],{nr,nc}});
+                    if(nr == n-1 && nc == m-1)return 1+d;
+                }
+            }
+        }
+
+        if(grid[n-1][m-1] == 0 && (n-1 != 0 && m != 0))return -1;
+        // return grid[n-1][m-1];
+        return -1;
+    }
+};
