@@ -1452,3 +1452,45 @@ class Solution {
 	    return;
 	}
 };
+
+// Finding min reachable city
+// the node which can reach the least num of cities with distance atmost = distanceThreshold. if 2 citites exist return the city with greater idx 
+class Solution {
+public:
+    int findTheCity(int V, vector<vector<int>>& edges, int distanceThreshold) {
+	    vector<vector<int>> matrix(V, vector<int>(V,1e9));
+        for(auto edge: edges){
+            matrix[edge[0]][edge[1]] = edge[2];
+            matrix[edge[1]][edge[0]] = edge[2];
+        }
+        
+        for(int i = 0; i< V; i++){matrix[i][i] = 0;}
+
+        for (int k = 0; k < V; k++) {
+            for (int i = 0; i < V; i++) {
+                for (int j = i+1; j < V; j++) {
+                    if (matrix[i][j] > matrix[i][k] + matrix[k][j]) {
+                        matrix[i][j] = matrix[i][k] + matrix[k][j];
+                        matrix[j][i] = matrix[j][k] + matrix[k][i];
+                    }
+                }
+            }
+        }
+
+        int ans = 0;
+        int minReachable = V;
+        for (int i = 0; i < V; i++) {
+            int reachable = 0;
+            for (int j = 0; j < V; j++) {
+                if (i != j && matrix[i][j] <= distanceThreshold) {
+                    reachable++;
+                }
+            }
+            if (reachable <= minReachable) {
+                minReachable = reachable;
+                ans = i;
+            }
+        }
+        return ans;
+    }
+};
