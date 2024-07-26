@@ -7,7 +7,7 @@ using namespace std;
 // dfs is slower than bfs (bfs gets into the queue in that order and gets excecuted neatly) - don't write a separate bfs function (auxilary stack space) whearas for dfs its better?
 
 // 4. shortest path from a node to all points
-// undirected unit weight - sime bfs
+// undirected unit weight - simple bfs
 // undirected weighted - dijkstras          // directed weighted acylcic - simple bfs/ toposort with bfs
 
 // learning
@@ -922,7 +922,7 @@ class Solution{
             for(auto u: adj[v]){
                 int d = dis[v]+ u[1];
                 if(dis[u[0]] == -1 || dis[u[0]] > d){
-                    q.push(u[0]);        // it should not be if(dis[u]==-1)p.push(u.first), bcz when u is having another shorter path then its childen night have a shorter path as well
+                    q.push(u[0]);        // it should not be if(dis[u]==-1)p.push(u.first), bcz when u is having another shorter path then its childen might have a shorter path as well
                     dis[u[0]] = d;       // in the prev q, the 1st path encountered is the shortest bcz all wts are 1 , duh its bfs
                 }
             }
@@ -965,7 +965,7 @@ class Solution{
     }
 };
 
-// Dijkstra algorithm - using Set - has an erase option O(logn), without it, there might be iterations in future
+// Q4 .Dijkstra algorithm - using Set - has an erase option O(logn), without it, there might be iterations in future
 // time : faster than pq , 0.08s
 class Solution{
     	public:
@@ -1001,7 +1001,7 @@ class Solution{
     }
 };
 
-// Q4. Shortest path in binary matrix
+// Q5. Shortest path in binary matrix
 // src - (0,0), dest - (n-1,m-1) and can only travel through the cells with 0 and not with 1.
 // simple bfs - time:O(V+E)=>O(n*m) 20, space:O(v)=>O(n*m) queue 10%
 class Solution {
@@ -1071,4 +1071,384 @@ public:
         // return grid[n-1][m-1];
         return -1;
     }
+};
+
+// Q5
+
+// Q6. Find the cost of shortest path from src to dst with atmost k vertices in the path
+// dijkstra's algorithm but more priority to stops - observation - bcz stops inc by 1, by default they get pushed in order so we can use queue itself.
+// time: O(ElogV - for dijkstra but since it is bfs => E) = O(E) = O(flights.size()) 92% , space:O(V+E) 20%
+class Solution {
+public:
+    int findCheapestPrice(int n, vector<vector<int>>& flights, int src, int dst, int k) {
+        vector<pair<int,int>> adj[n];
+        for(auto it: flights){
+            adj[it[0]].push_back({ it[1],it[2] });
+        }
+
+        queue< vector<int>> q;
+        q.push(vector<int>{0,src,0});
+        vector<int> dis(n, 1e9);
+        dis[src] = 0;
+
+        while(!q.empty()){
+            auto it = q.front(); q.pop();
+            int stops = it[0];
+            int v = it[1];
+            int price = it[2];
+
+            if(stops > k)continue;
+            if(v != dst){
+                for(auto iter: adj[v]){
+                    int u = iter.first, wt = iter.second;
+                    if(stops <= k && price+wt < dis[u]){
+                        dis[u] = price+wt;
+                        q.push(vector<int>{stops+1, u, price+wt});
+                    }
+                }
+            }
+        }
+
+        if(dis[dst] == 1e9) return -1;
+        return dis[dst];
+    }
+};
+
+// Q7 - dijkstra direct, with pair<dis,node> in  pq
+// time:O(ElogV) - 96%, space:O(E) 63%
+class Solution {
+public:
+    int networkDelayTime(vector<vector<int>>& times, int n, int k) {
+        vector<vector<pair<int,int>>> adj(n+1);
+        for(int u = 0; u < times.size(); u++){ 
+            adj[times[u][0]].push_back({times[u][2],times[u][1]});
+        }
+
+        vector<int> dis(n+1,1e9);
+        priority_queue< pair<int,int>, vector<pair<int,int>>, greater<pair<int,int>>>pq;
+        pq.push({0,k});
+        dis[k] = 0;
+
+        while(!pq.empty()){
+            auto it = pq.top(); pq.pop();
+            int v = it.second;
+            int time = it.first;
+
+            for(auto i: adj[v]){
+                int u = i.second;
+                int wt = i.first;
+                if(time+wt < dis[u]){
+                    dis[u] = time+wt;
+                    pq.push({dis[u],u});
+                }
+            }
+        }
+
+        int ans = -1;
+        for(int i = 1; i < n+1; i++){
+            if(dis[i] == 1e9)return -1;
+            ans = max(ans, dis[i]);
+        }
+        return ans;
+    }
+};
+
+// Q8 - num of shortest paths to reach n-1 from 0
+// imp - remember if an edge exists btw a node v to node n-1 and is included in 2 shortest paths - then it is counted as 2 not 1 - bcz we are counting paths
+// dijksttra's algo - tle with pq, prob with set - it converges any (d,n-1) present in set to 1 -> losing portential paths 
+
+class Solution {
+public:
+    int countPaths(int n, vector<vector<int>>& roads) {
+        vector<vector<pair<int,int>>> adj(n);
+        for(int u = 0; u < roads.size(); u++){
+            adj[roads[u][0]].push_back({roads[u][2],roads[u][1]});
+            adj[roads[u][1]].push_back({roads[u][2],roads[u][0]});
+        }
+
+        vector<int>dis(n,1e9);
+        priority_queue<pair<int,int>, vector<pair<int,int>>, greater<pair<int,int>>>pq;
+        pq.push({0, 0});
+        dis[0]=0;
+
+        int m = 1e9, f = 0;
+        while(!pq.empty()){
+            auto it = pq.top(); pq.pop();
+            int d = it.first;
+            int v = it.second;
+
+            if(v == n-1){
+                if(d < m){m = d; f = 1;}
+                else if(d == m){ f+=1; f = f % (1000000007); 
+                }
+            }
+            for(auto i: adj[v]){
+                int wt = i.first;
+                int u = i.second;
+                if(d+wt <= dis[u]){
+                    dis[u] = d+wt;
+                    pq.push({dis[u],u});
+                }
+            }
+        }
+        return f;
+    }
+};
+
+// it passed but had an another prob that the shortest path cant fit in int
+class Solution {
+public:
+    int countPaths(int n, vector<vector<int>>& roads) {
+        vector<vector<pair<int,int>>> adj(n);
+        for(int u = 0; u < roads.size(); u++){
+            adj[roads[u][0]].push_back({roads[u][2],roads[u][1]});
+            adj[roads[u][1]].push_back({roads[u][2],roads[u][0]});
+        }
+
+        vector<int>dis(n,1e9+1);
+        vector<int>ways(n,0);
+        priority_queue<pair<int,int>, vector<pair<int,int>>, greater<pair<int,int>>>pq;
+        pq.push({0, 0});
+        dis[0]=0;
+        ways[0] = 1;
+
+        int m = 1e9, f = 0;
+        while(!pq.empty()){
+            auto it = pq.top(); pq.pop();
+            int d = it.first;
+            int v = it.second;
+
+            for(auto i: adj[v]){
+                int wt = i.first;
+                int u = i.second;
+                if(d > INT_MAX - wt)d = INT_MAX;
+                if(d < dis[u]-wt){
+                    dis[u] = d+wt;
+                    ways[u] = ways[v];
+                    pq.push({dis[u],u});
+                }
+                else if(d == dis[u]-wt){
+                    ways[u] = (ways[u]+ways[v])%1000000007;
+                }
+            }
+        }
+        for(int i = 0; i < n; i++) cout<<dis[i]<<" ";
+        return ways[n-1];
+    }
+};
+
+// Q9. given a num start and num end and an arr of int which can be multiplied with start and mod with 1e5 to get a new start. How many of such opr need to be done to reach from start to end
+// nodes = 0 to 9999, each node has an indegree = 1 and outdegree = arr.size(), root has 0 indegree - tree
+// no need to use priority queue since edges do not have ant wts mentioned and also staps increase in order - simple bfs
+// using set in bfs to get rid of duplicates - tle
+int minimumMultiplications(vector<int>& arr, int start, int end) {
+        if(start == end)return 0;
+        
+        set<pair<int,int>>q;
+        q.insert({0,start});
+
+        set<int> s(arr.begin(), arr.end());
+        if(s.find(1) != s.end()) s.erase(1);
+        vector<int> a(s.begin(), s.end());
+
+        while(!q.empty()){
+            auto it = *(q.begin()); q.erase(it);
+            int steps = it.first;
+            int v = it.second;
+
+            for(int i: a){
+                int u = (v*i)%100000;
+                if(u == end)return steps+1;
+                q.insert({steps+1, u});
+            }
+        }
+        return -1;
+    }
+
+// using simple bfs - but we only push the pair into queue when steps req to get there > dis
+int minimumMultiplications(vector<int>& arr, int start, int end) {
+    if(start == end)return 0;
+    
+    queue<pair<int,int>>q;
+    q.push({0,start});
+    vector<int>dis(100000,1e9);
+    dis[start] = 0;
+
+    while(!q.empty()){
+        auto it = q.front(); q.pop();
+        int steps = it.first;
+        int v = it.second;
+
+        for(int i: arr){
+            int u = (v*i)%100000;
+            if(steps+1 < dis[u]){
+                dis[u] = steps+1;
+                if(u == end) return steps+1;
+                q.push({steps+1, u});
+            }
+        }
+    }
+    return -1;
+}
+
+// Find the shortest distance of all nodes from source - edge wts can be -ve => Bellan Ford Algo , dijkstra doesn't work
+// using dfs(incoorect implementation) - only diff in dealing with -ve edge cycles - tle
+class Solution{
+  public:
+    void dfs(int v, vector<int>& vis,  vector<int>& pathVis, vector<int>& dis, vector<vector<pair<int,int>>>& adj){
+        vis[v] = 1; pathVis[v] = 1;
+        for(auto it: adj[v]){
+            int u = it.first, wt = it.second;
+            
+            if(pathVis[u] && dis[u] < 0){dis[u] = 1e9; return;}
+            else if(!vis[u] || vis[u] && dis[u] > dis[v]+wt){
+                dis[u] = dis[v]+wt;
+                dfs(u, vis, pathVis, dis, adj);
+            }
+        }
+        pathVis[v] = 0;
+        return;
+    }
+    
+    vector<int> bellman_ford(int V, vector<vector<int>>& edges, int S) {
+        vector<vector<pair<int,int>>> adj(V);
+        for(int i = 0; i < edges.size(); i++){
+            adj[edges[i][0]].push_back({edges[i][1],edges[i][2]});
+        }
+        
+        vector<int> vis(V,0), pathVis(V,0), dis(V,1e8);
+        dis[S] = 0;
+        dfs(S, vis, pathVis, dis,adj);
+        return vector<int>{};
+        
+    }
+};
+
+// dfs to detect -ve cycles
+class Solution {
+  public:
+    void dfs(int v, vector<int>& vis,  vector<int>& pathVis, vector<int>& dis, vector<vector<pair<int,int>>>& adj, int& flag){
+        if(flag == 1)return;
+        vis[v] = 1; pathVis[v] = 1;
+        for(auto it: adj[v]){
+            int u = it.first, wt = it.second;
+            
+            if(pathVis[u] && dis[u] < 0){flag = 1; return;}
+            else if(!vis[u] || vis[u] && dis[u] > dis[v]+wt){
+                dis[u] = dis[v]+wt;
+                dfs(u, vis, pathVis, dis, adj, flag);
+            }
+        }
+        pathVis[v] = 0;
+        return;
+    }
+    
+    vector<int> bellman_ford(int V, vector<vector<int>>& edges, int S) {
+        vector<vector<pair<int,int>>> adj(V);
+        for(int i = 0; i < edges.size(); i++){
+            adj[edges[i][0]].push_back({edges[i][1],edges[i][2]});
+        }
+        
+        vector<int> vis(V,0), pathVis(V,0), dis(V,1e8);
+        dis[S] = 0;
+        int flag = 0;
+        dfs(S, vis, pathVis, dis, adj, flag);
+        if(flag == 1)return vector<int>{-1};
+        return dis;
+    }
+};
+
+// Bellman ford - only for directed graphs (if given undirected - convert to directed)
+// 1. relax all edges N-1 times. relax meaning iterate and check if dist[v] > dist[u] + wt and update
+// why n-1, bcz any path has at max n-1 edges, so at max we need to do n-1 iters to obtain the shortest distance fron src to all nodes
+// how to detect -ve cycle - if the dis dec by nth iter - node is on -ve cycle
+class Solution {
+  public:
+    vector<int> bellman_ford(int V, vector<vector<int>>& edges, int S) {
+        vector<int>dis(V,1e8);
+        dis[S]=0;
+        
+        for(int i = 0; i < V; i++){
+            for(auto edge : edges){
+                if(dis[edge[1]] > dis[edge[0]] + edge[2] && dis[edge[0]] != 1e8){
+                    if(i == V-1) return vector<int>{-1};
+                    else dis[edge[1]] = dis[edge[0]] + edge[2];
+                }
+            }
+        }
+        
+        return dis;
+    }
+};  
+
+// Floyd Warshall Algorithm
+// shortest distance of all nodes from all nodes - using afj matrix where matrix[v][u] gives the shortest path from v to u
+// using bellman ford - tle - or using dijkstra on all nodes - not aby better => V*ElogV => O(V^3)
+class Solution {
+  public:
+    
+    void bellman_ford(int v, vector<vector<int>>&matrix, vector<vector<int>>&edges){
+        int V = matrix.size();
+
+        for(int i = 0; i < V; i++){
+            if(matrix[v][i] == -1) matrix[v][i] = INT_MAX;
+        }
+
+        for(int i = 0; i < V; i++){
+            for(auto edge : edges){
+                if(matrix[v][edge[0]] != INT_MAX && matrix[v][edge[1]] > matrix[v][edge[0]] + edge[2]){
+                    matrix[v][edge[1]] = matrix[v][edge[0]] + edge[2];
+                }
+            }
+            
+        }
+        return;
+    }
+    
+	void shortest_distance(vector<vector<int>>&matrix){
+	    int V = matrix.size();
+	    vector<vector<int>>edges;
+	    
+	    for(int i =0; i < V; i++){
+	        for(int j = 0; j < V; j++){
+	            if(matrix[i][j] != -1 && matrix[i][j] != 0){
+	                edges.push_back(vector<int>{i, j, matrix[i][j]});
+	            }
+	        }
+	    }
+	   
+	   int i = 0;
+	    for(int i = 0; i < V; i++){
+	        bellman_ford(i, matrix, edges);
+	    }
+	    return;
+	}
+};
+
+// Floyd Warshall Algorithm - nore like brute force- using precomputed values to find the shortest path, can detect -ve cycles also
+// d[i][j] = min (d[i][k] + d[k][j])for all k
+class Solution {
+  public:
+	void shortest_distance(vector<vector<int>>&matrix){
+	    int V = matrix.size();
+	    
+	    for(int i = 0; i< V; i++){
+	        for(int j = 0; j < V; j++){
+	            if(i == j)matrix[i][j] = 0;
+	            if(matrix[i][j] == -1)matrix[i][j] = 1e9;
+	        }
+	    }
+	    
+	    for(int k = 0; k < V; k++){
+	        for(int i = 0; i< V; i++){
+	            for(int j = 0; j < V; j++){
+	                matrix[i][j] = min(matrix[i][j], matrix[i][k] + matrix[k][j]);
+	            }
+	        }
+	    }
+	    
+	    for(int i = 0; i< V; i++){if(matrix[i][i] < 0)cout<<"negative cycle";}
+	    
+	    return;
+	}
 };

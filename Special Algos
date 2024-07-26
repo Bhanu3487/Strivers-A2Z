@@ -13,3 +13,8 @@
 // ex - 2ptr Q3 fruits in basket
 
 // Kahn's algorithm - for toposort by using indegree arr and ordering
+
+// graphs
+// dijkstra's - shortest dist from a node to all other nodes- with no -ve cycles - time O(ElogV)
+// bellman ford - shortest dist from a node to all other nodes- can detect -ve cycles - time O(V*E)
+// Floyd Warshall Algorithm - shortest distance of all nodes from all nodes- can detect -ve cycles - O(V*E)

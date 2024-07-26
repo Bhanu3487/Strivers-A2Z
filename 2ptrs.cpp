@@ -102,6 +102,28 @@ int totalFruits(int N, vector<int> &arr) {
     return ans;
 }
 
+    int totalFruits(vector<int> &arr) {
+        int n = arr.size();
+        int ans = 0, start = 0;
+        unordered_map<int, int> mp;
+    
+        for (int i = 0; i < n; i++) {
+            mp[arr[i]]++;
+    
+            if (mp.size() > 2) {
+                mp[arr[start]]--;
+                if (mp[arr[start]] == 0) {
+                    mp.erase(arr[start]);
+                }
+                start++;
+            }
+    
+            ans = max(ans, i - start + 1);
+        }
+    
+        return ans;
+    }
+
 // method 2: time: O(n), space: O(3)
 // to reduce time, once we encounter 3 different types of fruits, we slide l and r i.e len never reduceseither maintains or increases)
 
