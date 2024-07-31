@@ -1494,3 +1494,201 @@ public:
         return ans;
     }
 };
+
+// MST, Disjoint sets ----------------------------------------------
+// Q1
+// Prim's Algorithm O(ElogV)
+class Solution{
+	public:
+    int spanningTree(int V, vector<vector<int>> adj[])
+    {
+        priority_queue<pair<int,int>,  vector<pair<int,int>>, greater<pair<int,int>>>pq;
+        vector<bool>vis(V,0);
+        pq.push({0, 0});
+        int sum = 0;
+        
+        while(!pq.empty()){
+            auto it = pq.top(); pq.pop();
+            int v = it.second;
+            int wt = it.first;
+            
+            if(vis[v])continue;
+            // add to mst : vis[true] here, not when adding to pq
+            vis[v] = true;
+            sum += wt;
+            
+            for(auto i: adj[v]){
+                int u = i[0];
+                int ewt = i[1];
+                if(!vis[u]){
+                    pq.push({ewt,u});
+                }
+            }
+        }
+        
+        return sum;
+    }
+};
+
+// Q3 disjoint set by rank
+// finding the untimate parent and union: connecting the xth ult par with zth ult par
+// generally union connects smaller set to larger set(rank) - then no change in rank and path com is simple, vice versa ranks upbate, travel time of all larger nodes inc
+
+int find(int A[],int X){
+    if(X == A[X]) return X;
+    return A[X] = find(A, A[X]);        //path compression - O(4a)=<O(1)
+}
+void unionSet(int A[],int X,int Z){
+	int p_x = find(A, X);
+	int p_z = find(A, Z);
+	
+	if(p_x == p_z)return;
+	else A[p_x] = p_z;
+}
+
+class DisjointSet{  //O(4a)=O(1)
+    vector<int>rank, par, size;
+public:
+    DisjointSet(int n){
+        rank.resize(n+1,0);
+        par.resize(n+1);
+        size.resize(n+1,0);
+        for(int i = 0; i < n; i++){
+            par[i] = i;
+            size[i] = 1;
+        }
+    }
+
+    int find(int par[],int X){
+        if(X == par[X]) return X;
+        return par[X] = find(par, par[X]);        //path compression - O(4a)=<O(1)
+    }
+
+        // union by rank
+    void union_by_rank(int u, int v){
+        int ulp_u = find(u);
+        int ulp_v = find(v);
+
+        if(ulp_u == ulp_v) return;
+        if(rank[ulp_u] < rank[ulp_v]) par[ulp_u] = ulp_v;
+        else if(rank[ulp_u] < rank[ulp_v]) par[ulp_v] = ulp_u;
+        else{
+            par[ulp_v] = ulp_u;
+            rank[ulp_u]++;
+        }
+    }
+
+    // union by size - more intuitive
+    void union_by_size(int u, int v, size){
+        int ulp_u = find(u);
+        int ulp_v = find(v);
+
+        if(ulp_u == ulp_v) return;
+        if(size[ulp_u] < size[ulp_v]) {
+            par[ulp_u] = ulp_v;
+            size[ulp_v] += size[ulp_u];
+        }
+        else{
+            par[ulp_v] = ulp_u;
+            size[ulp_u] += size[ulp_v];
+        }
+    }
+
+};
+
+// Krushkals MST
+class Solution{
+	public:
+	
+	int find(vector<int>& par,int X){
+        if(X == par[X]) return X;
+        return par[X] = find(par, par[X]);        //path compression - O(4a)=<O(1)
+    }
+    
+    void union_by_size(vector<int>&size,vector<int>&par, int u, int v){
+        int ulp_u = find(par,u);
+        int ulp_v = find(par,v);
+
+        if(ulp_u == ulp_v) return;
+        if(size[ulp_u] < size[ulp_v]) {
+            par[ulp_u] = ulp_v;
+            size[ulp_v] += size[ulp_u];
+        }
+        else{
+            par[ulp_v] = ulp_u;
+            size[ulp_u] += size[ulp_v];
+        }
+    }
+	
+    int spanningTree(int V, vector<vector<int>> adj[]){
+        vector<vector<int>>edges;
+        vector<int>par(V,0), size(V,0);
+        for(int v = 0; v < V; v++){
+            par[v] = v; size[v] = 1;
+            for(auto i: adj[v]){
+                int u = i[0];
+                int wt = i[1];
+                edges.push_back(vector<int>{wt,v,u});       //undirected so each edge multiple times, but since the vertices when encountered 2nd time have the same par - no change
+            }
+        }
+        
+        sort(edges.begin(), edges.end());
+        
+        int ans= 0;
+        for(auto edge: edges){
+            int wt = edge[0], v = edge[1],u = edge[2];
+            
+            int ulp_u = find(par, u);
+            int ulp_v = find(par, v);
+            if(ulp_u != ulp_v){
+                union_by_size(size,par, u , v);
+                ans += wt;
+            }
+        }
+        return ans;
+    }
+};
+
+class Solution{
+	public:
+	int find(int u, vector<int>& par){
+	    if(u == par[u])return u;
+	    find(par[u],par);
+	}
+	
+	bool Union(int u, int v, vector<int>& size, vector<int>& par){
+	    int p_u = find(u, par);
+	    int p_v = find(v, par);
+	    if(p_u == p_v)return false;
+	  
+	    if(size[p_u] < size[p_v]) par[p_u] = p_v;
+ 	    else par[p_v] = p_u;
+ 	    if(size[p_u] == size[p_v]) size[p_u]++;
+ 	    
+ 	    return true;
+	}
+	
+    int spanningTree(int V, vector<vector<int>> adj[]){
+        int ans = 0;
+        vector<int>par(V,0), size(V,1);
+        for(int i = 0; i < V; i++) par[i] = i;
+        
+        set<vector<int>>edges;
+        for(int u = 0; u < V; u++){
+            for(int v = 0; v < adj[u].size(); v++){
+                int i = min(u, adj[u][v][0]);
+                int j = max(u, adj[u][v][0]);
+                edges.insert({adj[u][v][1], i, j});
+            }
+        }
+        
+        vector<vector<int>>edges_sorted(edges.begin(), edges.end());
+        sort(edges_sorted.begin(), edges_sorted.end());
+        
+        for(int i = 0; i < edges_sorted.size(); i++){
+            if(Union(edges_sorted[i][1], edges_sorted[i][2], size, par)) ans += edges_sorted[i][0];
+        }
+
+        return ans;
+    }
+};
