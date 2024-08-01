@@ -1596,7 +1596,7 @@ public:
 
 };
 
-// Krushkals MST
+// Q5. Krushkals MST
 class Solution{
 	public:
 	
@@ -1690,5 +1690,94 @@ class Solution{
         }
 
         return ans;
+    }
+};
+
+// Q6 - Number of operations to make network connected
+// with dfs:- find the num of connected components and vertices in each component 
+// 2 req for connected netowrk: 1. atleast 1 mst in each connected comp (E >= V-1), 2. extra needed edges => connected comp - 1
+// time:O(E+2V) 15 (adj-O(E), dfs-O(E+V), mp-O(V)), space:O(E+V) adj-O(E),mp,vis and par- O(V) 10
+class Solution {
+public:
+    int find(int v, vector<int>& par){
+        if(v == par[v]) return v;
+        return find(par[v], par);
+    }
+
+    void dfs(int v, int p, int V, vector<vector<int>>& adj, vector<bool>& vis,  vector<int>& par){
+        vis[v] = true;
+        par[v] = find(p, par);
+        for(int u: adj[v]){
+            if(!vis[u]) dfs(u, v, V, adj, vis, par);
+        }
+        return;
+    }
+
+    int makeConnected(int V, vector<vector<int>>& connections) {
+        vector<vector<int>> adj(V);
+        for(int i = 0; i < connections.size(); i++){
+            adj[connections[i][0]].push_back(connections[i][1]);
+            adj[connections[i][1]].push_back(connections[i][0]);
+        }
+
+        vector<bool>vis(V,false);
+        vector<int>par(V,0);
+        for(int i = 0; i < V; i++)par[i] = i;
+        for(int v = 0; v < V; v++) if(!vis[v]) dfs(v, v, V, adj, vis, par);
+        
+
+        unordered_map<int,int>mp;
+        for(int i = 0; i < V; i++){
+            mp[par[i]]++;
+        }
+        
+        int E = connections.size();
+        if(E < V-1)return -1;
+        if(V - E <= 1) return mp.size()-1;
+        return -1;
+    }
+};
+
+// with krushkals
+// krushkal helps in creating disjoint sets and size of each set - dynamic connections
+// time:O(E+V) 23, space: O(V), 28 
+class Solution {
+public:
+    int find(int v, vector<int>& par){
+        if(v == par[v]) return v;
+        return find(par[v], par);
+    }
+
+    void union_set(int u, int v, vector<int>& size, vector<int>& par){
+        int p_u = find(u, par);
+	    int p_v = find(v, par);
+	    if(p_u == p_v)return;
+	  
+	    if(size[p_u] < size[p_v]) par[p_u] = p_v;
+ 	    else par[p_v] = p_u;
+ 	    if(size[p_u] == size[p_v]) size[p_u]++;
+ 	    return;
+    }
+
+    int makeConnected(int V, vector<vector<int>>& connections) {
+        vector<int>size(V,1), par(V,0);
+        for(int i = 0; i < V; i++) par[i] = i;
+        for(auto edge: connections){
+            union_set(edge[0], edge[1],size, par);
+        }
+
+        for(int i = 0; i < V; i++) {par[i] = find(par[i],par);}
+
+        unordered_map<int,int>mp;
+        for(int i = 0; i < V; i++){
+            mp[par[i]]++;
+        }
+
+        for(auto it:mp) cout<<it.first<<" "<<it.second<<endl;
+
+        int E = connections.size();
+        if(E < V-1)return -1;
+        if(V - E <= 1) return mp.size()-1;
+        return -1;
     }
 };
