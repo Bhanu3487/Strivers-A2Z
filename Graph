@@ -10,6 +10,8 @@ using namespace std;
 // undirected unit weight - simple bfs
 // undirected weighted - dijkstras          // directed weighted acylcic - simple bfs/ toposort with bfs
 
+// bfs - pushint to queue and popping are in same order, but for dfs - popping not pushing, to print the nodes in bfs, or dfs, print them when visited of that node is being updated
+
 // learning
 // Q1 - num of graphs possible with n vertices - ans: pow(2,(n*(n-1))/2) - check using adj matrix
 
@@ -46,10 +48,11 @@ vector<vector<int>> printGraph(int V, vector<pair<int,int>>edges) {
 // Q4 - connected components (in a disconnected graphs)
 // to traversal in a disconnected graph - keep track of visited vertices.
 for(auto v: V){
-    if(!visited[v]) traversal(v)        //visited is and arr and traversal is a func 
+    if(!visited[v]) traversal(v)        //visited is and arr and traversal is a func ex.bfs,dfs
 }
 
 // Q5 Function to return Breadth First Traversal of given graph.
+// you can print either when popping, or when pusing(near visited), but vive versa is not true, vis = true must be done once the node is encountered
 vector<int> bfsOfGraph(int V, vector<int> adj[]) {
     queue<int> q;
     vector<bool> visited(V,false);
@@ -73,8 +76,58 @@ vector<int> bfsOfGraph(int V, vector<int> adj[]) {
     
     return bfs;
 }
+//  or
+vector<int> bfsOfGraph(int V, vector<int> adj[]) {
+    queue<int> q;
+    vector<bool> visited(V,false);
+    vector<int> bfs;
+
+    q.push(0);
+    visited[0] = true;
+    bfs.push_back(0);
+
+    while(!q.empty()){
+        int v = q.front();
+        q.pop();
+
+        for(int i: adj[v]){
+            if(!visited[i]) {
+                q.push(i);
+                visited[i] = true;
+                bfs.push_back(i);
+            }
+        }
+    }
+    return bfs;
+}
+
+// this is incorrect
+vector<int> bfsOfGraph(int V, vector<int> adj[]) {
+        queue<int> q;
+        vector<bool> visited(V,false);
+        vector<int> bfs;
+        
+        q.push(0);
+        // visited[0] = true;
+    
+        while(!q.empty()){
+            int v = q.front();
+            q.pop();
+            bfs.push_back(v);
+            visited[v] = true;
+        
+            for(int i: adj[v]){
+                if(!visited[i]) {
+                    q.push(i);
+                }
+            }
+        }
+        
+        return bfs;
+    }
 
 // Q6 Function to return a list containing the DFS traversal of the graph.
+// vis is done once we popped it or are actually started studying the node instead of just visiting
 vector<int> dfsOfGraph(int V, vector<int> adj[]) {
     vector<int> dfs;
     vector<int> visited(V, false);
@@ -98,6 +151,33 @@ vector<int> dfsOfGraph(int V, vector<int> adj[]) {
         }
     }
     return dfs;
+}
+
+///or
+while(!s.empty()){
+    int v = s.top();s.pop();
+    
+    for(int u = 0; u < n; u++){
+        if(edges[v][u] == 1 && visited[u] == false){
+            s.push(u);
+            visited[u] = true;
+        }
+    }
+}
+
+void dfs(int v, vector<int>& vis, vector<int> adj[], vector<int>& ans){
+    vis[v] = 1;
+    ans.push_back(v);
+    for(int u:adj[v]){
+        if(vis[u] == 0)dfs(u,vis,adj,ans);
+    }
+    return;
+}
+
+vector<int> dfsOfGraph(int V, vector<int> adj[]) {
+    vector<int> ans, vis(V,0);
+    dfs(0, vis, adj, ans);
+    return ans;
 }
 
 // 2. traversal---------------------------------------------
@@ -1073,7 +1153,41 @@ public:
     }
 };
 
-// Q5
+// Q5 min effort
+// dijkstra's instead of cum_dis we track the effort to reach a cell
+/// time:O(ElogV), space:O(E)
+class Solution {
+public:
+    int minimumEffortPath(vector<vector<int>>& heights) {
+        int n = heights.size(), m = heights[0].size();
+        priority_queue<pair<int,pair<int,int>>, vector<pair<int,pair<int,int>>>, greater<pair<int,pair<int,int>>> > pq;
+        vector<vector<int>> effort(n, vector<int>(m,1e6+1));
+
+        effort[0][0] = 0;
+        pq.push({0,{0,0}});
+
+        int dr[] = {-1,0,1,0};
+        int dc[] = {0,1,0,-1};
+
+        while(!pq.empty()){
+            auto it = pq.top();pq.pop();
+            int c_effort = it.first;
+            int vr = it.second.first;
+            int vc = it.second.second;
+            if(c_effort > effort[n-1][m-1]) continue;
+
+            for(int i = 0; i < 4; i++){
+                int nr = vr + dr[i];
+                int nc = vc + dc[i];
+                if(nr < n && nr >= 0 && nc < m && nc >= 0 && effort[nr][nc] > max(c_effort, abs(heights[nr][nc] - heights[vr][vc]) )){
+                    effort[nr][nc] = max(c_effort, abs(heights[nr][nc] - heights[vr][vc]));
+                    pq.push({effort[nr][nc], {nr, nc}});
+                }
+            }
+        }
+        return effort[n-1][m-1];
+    }
+};
 
 // Q6. Find the cost of shortest path from src to dst with atmost k vertices in the path
 // dijkstra's algorithm but more priority to stops - observation - bcz stops inc by 1, by default they get pushed in order so we can use queue itself.
@@ -1195,6 +1309,49 @@ public:
     }
 };
 
+class Solution {
+public:
+    int countPaths(int n, vector<vector<int>>& roads) {
+        set<vector<int>>st;
+        int mod= 1000000007;
+        vector<int>time(n,INT_MAX);
+        vector<int>steps(n,0);
+
+        vector<vector<int>> adj(n, vector<int>(n,0));
+        for(auto edge: roads){
+            adj[edge[0]][edge[1]] = edge[2];
+            adj[edge[1]][edge[0]] = edge[2];
+        }
+
+        time[0] = 0;
+        steps[0] = 1;
+        st.insert(vector<int>{time[0], steps[0], 0});
+
+        while(!st.empty()){
+            auto it = *(st.begin());st.erase(it);
+            int t = it[0];
+            int cnt = it[1];
+            int v = it[2];
+
+            for(int u = 0; u < n; u++){
+                if(adj[v][u] != 0 && time[u] > t%mod + adj[v][u] % mod){
+                    if(time[u] != 1e9 + 1)st.erase(vector<int>{time[u], steps[u], u});
+                    time[u] = t + adj[v][u];
+                    steps[u] = cnt % mod;
+                    st.insert(vector<int>{time[u], steps[u], u});
+                }
+                else if(adj[v][u] != 0 && time[u] == t % mod + adj[v][u] % mod){
+                    st.erase(vector<int>{time[u], steps[u], u});
+                    steps[u] = (steps[u]+cnt) % mod;
+                    st.insert(vector<int>{time[u], steps[u], u});
+                }
+            }
+        }
+        
+        return steps[n-1];
+    }
+};
+
 // it passed but had an another prob that the shortest path cant fit in int
 class Solution {
 public:
@@ -1292,7 +1449,7 @@ int minimumMultiplications(vector<int>& arr, int start, int end) {
 }
 
 // Find the shortest distance of all nodes from source - edge wts can be -ve => Bellan Ford Algo , dijkstra doesn't work
-// using dfs(incoorect implementation) - only diff in dealing with -ve edge cycles - tle
+// using dfs(incorrect implementation) - only diff in dealing with -ve edge cycles - tle
 class Solution{
   public:
     void dfs(int v, vector<int>& vis,  vector<int>& pathVis, vector<int>& dis, vector<vector<pair<int,int>>>& adj){
@@ -1381,7 +1538,7 @@ class Solution {
     }
 };  
 
-// Floyd Warshall Algorithm
+// Floyd Warshall Algorithm - multi source algo, can ditect -ve cycles as well
 // shortest distance of all nodes from all nodes - using afj matrix where matrix[v][u] gives the shortest path from v to u
 // using bellman ford - tle - or using dijkstra on all nodes - not aby better => V*ElogV => O(V^3)
 class Solution {
@@ -1781,3 +1938,99 @@ public:
         return -1;
     }
 };
+
+// using disjoint sets
+class DisjointSet{
+public:
+    vector<int> size, par;
+    DisjointSet(int V){
+        for(int i = 0; i < V; i++){
+            size.resize(V+1,1);
+            par.resize(V+1,0);
+            for(int i = 0; i < V+1; i++) par[i] = i;
+        }
+    }
+
+    int find(int v){
+        if(v == par[v]) return v;
+        return par[v] = find(par[v]);
+    }
+
+    bool union_set(int u, int v){
+        int p_u = find(u);
+	    int p_v = find(v);
+	    if(p_u == p_v)return true;
+	  
+	    if(size[p_u] < size[p_v]) {
+            par[p_u] = p_v;
+            size[p_v] += size[p_u];
+        }else {
+            par[p_v] = p_u;
+            size[p_u] += size[p_v];
+        }
+ 	    return false;
+    }
+};
+
+class Solution {
+public:
+    int makeConnected(int V, vector<vector<int>>& connections) {
+        int extra = 0;
+        DisjointSet ds(V);
+        for(auto edge: connections){
+            if(ds.union_set(edge[0], edge[1]))extra++;
+        }
+
+        int req = -1;
+        for(int i = 0; i < V; i++){
+            if(ds.par[i] == i)req++;
+        }
+        if(extra >= req) return req;
+        return -1;
+    }
+};
+
+// Q7 - most stones removed with same stones or columns - basically find num of components(disconnected) 
+// simple dfs - mle - could improve graph representation (currently adj list for x and y cord O(2*E))
+class Solution {
+public:
+    void dfs(int x, int y, vector<int> adjX[], vector<int> adjY[], vector<vector<int>>& vis){
+        vis[x][y] = 1;
+        for(int y1: adjX[x]){
+            if(vis[x][y1] == 0) dfs(x, y1, adjX, adjY, vis);
+        }
+
+        for(int x1: adjY[y]){
+            if(vis[x1][y] == 0) dfs(x1, y, adjX, adjY, vis);
+        }
+        return;
+    }
+
+    int removeStones(vector<vector<int>>& stones) {
+        int x = 0, y = 0, n = stones.size();
+        for(int i = 0; i < stones.size(); i++){
+            x = max(x, stones[i][0]);
+            y = max(y, stones[i][1]);
+        }
+        vector<int>adjX[x+1], adjY[y+1];
+        vector<vector<int>> vis(x+1, vector<int>(y+1,-1));
+        for(int i = 0; i < n; i++){
+            vis[stones[i][0]][stones[i][1]] = 0;
+            adjX[stones[i][0]].push_back(stones[i][1]);
+            adjY[stones[i][1]].push_back(stones[i][0]);
+        }
+
+        int com = 0;
+        for(int i = 0; i < x+1; i++){
+            for(int j = 0; j < y+1; j++){
+                if(vis[i][j] == 0){
+                    dfs(i, j, adjX, adjY, vis);
+                    com++;
+                }
+            }
+        }
+        return n-com;
+    }
+};
+
+// 

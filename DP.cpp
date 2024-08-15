@@ -506,7 +506,7 @@ bool isSubsetSum(vector<int>& arr, int sum) {
     }
 
 // 1D DP - Space Optimization
-// since the above 2d tabulation has dp(i) <= dp(i-1) only and not i, we can use only 2 1d arr prev and cur.
+// since the above 2d tabulation has dp(i) <= dp(i-1) only and not i(or any other prev vales), we can use only 2 1d arr prev and cur.
 bool isSubsetSum(vector<int>& arr, int sum) {
     int n = arr.size();
     vector<bool> dp(sum + 1, false); // dp[i] will be true if there is a subset of arr that sums up to i
